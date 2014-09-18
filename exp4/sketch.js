@@ -22,7 +22,7 @@ function setup() {
   // noLoop();
   angleMode(RADIANS);
 
-  bMgr = new BubbleMgr( 40 );
+  bMgr = new BubbleMgr( 12 );
 }
 
 function draw() {
@@ -126,8 +126,8 @@ function Bubble( inBubbleRadius, inOrbitObj, inOrbitRadius, inOrbitRadius2, inOr
 
     this.x = random(width/10,width*0.9);
     this.y = random(height/10,height*0.9);
-    this.vx = random(1,10);
-    this.vy = random(1,10);
+    this.vx = random(50,100);
+    this.vy = random(-20,20);
   }
 
 }
@@ -148,12 +148,12 @@ Bubble.prototype.update = function() {
   } else {
     this.x += this.vx * globalSpeed;
     this.y += this.vy * globalSpeed;
-    if ( this.x > width ) {
-      this.x = 0;
-    } else if ( this.x < 0 ) {
-      this.x = width;
+    if ( this.x > width+300 ) {
+      this.x = -300;
+    } else if ( this.x < -300 ) {
+      this.x = width+300;
     }
-    if ( this.y > height ) {
+    if ( this.y > height+200 ) {
       this.y = 0;
     } else if ( this.y < 0 ) {
       this.y = height;
