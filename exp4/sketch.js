@@ -97,7 +97,7 @@ BubbleMgr.prototype.draw = function() {
   for (var i=0; i<bArrLen; i++ ) {
     this.bArr[i].draw();
   }
-  console.log("v="+(0.4+noise(lightAngleFluctuator)/4));
+  //console.log("v="+(0.4+noise(lightAngleFluctuator)/4));
   lightAngle = HALF_PI + (0.4+noise(lightAngleFluctuator)/4)*QUARTER_PI*cos(lightAngleFluctuator);
   lightAngleFluctuator += 0.02*globalSpeed;// + noise(lightAngleFluctuator)/100;
 }
