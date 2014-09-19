@@ -40,7 +40,7 @@ function setup() {
 
   window.setTimeout(function() { showHelpText = false; }, 5000);
 
-  lightAngle = HALF_PI;
+  lightAngle = QUARTER_PI;
 
 }
 
@@ -232,17 +232,23 @@ Bubble.prototype.draw = function() {
 };
 
 Bubble.prototype.drawShadow = function() {
+  lightAngle = HALF_PI - HALF_PI*0.9*(mouseX/(width/2)-1);
   var p0x = this.x + cos(lightAngle+HALF_PI)*this.bubbleRadius;
   var p0y = this.y + sin(lightAngle+HALF_PI)*this.bubbleRadius;
   var p1x = this.x + cos(lightAngle-HALF_PI)*this.bubbleRadius;
   var p1y = this.y + sin(lightAngle-HALF_PI)*this.bubbleRadius;
-  var x0 = p0x;// - sqrt((height-p0y)/sin(lightAngle) - sq(height-p0y));
+  // var x0 = p0x;// - sqrt((height-p0y)/sin(lightAngle) - sq(height-p0y));
+  var x0 = p0x + (lightAngle<HALF_PI ? 1:-1)*sqrt(sq((height-p0y)/sin(lightAngle)) - sq(height-p0y));
   var y0 = height;
-  var x1 = p1x;
+  var x1 = p1x + (lightAngle<HALF_PI ? 1:-1)*sqrt(sq((height-p1y)/sin(lightAngle)) - sq(height-p1y));;
   var y1 = height;
+
   noStroke();
   fill(120,50);
-  rect(p0x,p0y,p1x-p0x,height-p0y);
+  quad(p0x,p0y,p1x,p1y,x1,y1,x0,y0);
+  //rect(p0x,p0y,p1x-p0x,height-p0y);
+
+  // stroke(120,50);
   // line(p0x,p0y,x0,y0);
   // line(p1x,p1y,x1,y1);
 
