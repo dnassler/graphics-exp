@@ -7,8 +7,12 @@ var doorSlideOpen1;
 var doorSlideClose1;
 
 var doorSounds = [];
+var doorSoundsByType = {};
 
 var doorMgr;
+
+var DOOR_WIDTH = 100;
+var DOOR_HEIGHT = 100;
 
 function preload() {
 
@@ -22,6 +26,11 @@ function preload() {
 
 function setup() {
   createCanvas(window.innerWidth, window.innerHeight);
+
+  console.log("displayWidth="+displayWidth+", displayHeight="+displayHeight+", windowWidth="+windowWidth+", windowHeight="+windowHeight+", window.innerWidth="+window.innerWidth+", window.innerHeight="+window.innerHeight+", width="+width+", height="+height);
+
+  DOOR_WIDTH = min(width/10,100);
+  DOOR_HEIGHT = DOOR_WIDTH;
 
   // var pg = createGraphics(width,height);
   // pg.clear();
@@ -67,6 +76,16 @@ function setup() {
     close: {file:doorSlideClose1,duration:doorSlideClose1Dur}
     });
 
+  // create a map to door sounds by doorType (i.e. horizontal/vertical)
+  for (var i=0; i<doorSounds.length; i++) {
+    var doorSound = doorSounds[i];
+    var doorType = doorSound.doorType;
+    if ( !doorSoundsByType[doorType] ) {
+      doorSoundsByType[doorType] = [];
+    }
+    doorSoundsByType[doorType].push( doorSound );
+  }
+
   doorMgr = new DoorMgr();
 
   // doorOpen.play();
@@ -79,6 +98,7 @@ function setup() {
   //   doorSlideClose1.play();
   // }, 5000 );
 
+  scene1();
 }
 
 function draw() {
@@ -100,14 +120,65 @@ function draw() {
 function mousePressed() {
   //toggleDoor();
   doorMgr.openNewDoor( function( door ) {
-    console.log("a new door has finished opening: id="+door.doorId);
+    console.log("a new door has finished opening: id="+door.doorId+", x="+door.x+", y="+door.y);
     window.setTimeout(function() {
-      console.log("about to close door:");
-      console.log("doorId = "+door.doorId);
+      console.log("about to close door:"+door.doorId);
       door.close();
     }, 5000);
   });
 }
+
+function scene1() {
+  var d1 = doorMgr.openNewDoor();
+  var d2 = doorMgr.openNewDoor();
+  window.setTimeout( function() {
+    d1.close();
+    d2.close( scene1done );
+  }, 5000);
+}
+function scene1done() {
+  scene2();
+}
+
+function scene2() {
+  var d1 = doorMgr.openNewDoor( function(door) {
+    window.setTimeout( function() {
+      door.close( scene2done );
+    },random(2000));
+  });
+}
+function scene2done() {
+  scene3();
+}
+
+function scene3() {
+  var numDoors = random(5,10);
+  var dArr = [];
+  for ( var i=0; i<numDoors; i++ ) {
+    var d = doorMgr.openNewDoor();
+    if ( d ) {
+      dArr.push( d );
+    }
+  }
+  window.setTimeout( function() {
+    for ( var i=0; i<numDoors; i++ ) {
+      var d = dArr[i];
+      (function(door){
+        window.setTimeout( function() {
+          door.close();
+        }, random(1000,5000) );
+      })(d);
+    }
+  }, 3000);
+  // TODO: improve the transition to scene3 by keeping track of when the last door closes (which is random but max 5000ms)
+  window.setTimeout( function() {
+    scene3done();
+  }, random(5000,9000));
+}
+function scene3done() {
+  scene1();
+}
+
 
 function DoorMgr() {
 
@@ -118,28 +189,29 @@ function DoorMgr() {
 }
 
 DoorMgr.prototype = {
-  findEmptySpace: function(door) {
+  findEmptySpace: function(doorSpaceReq) {
     var rx = null;
     var ry = null;
-    var maxLoops = 100;
+    var maxLoops = 1000;
     var loopCount = 0;
-    while ( !rx || !this.isSpaceEmpty( rx, ry, door ) ) {
-      rx = random(width/10, width*0.9);
-      ry = random(height/10, height*0.9);
+    while ( !rx || !this.isSpaceEmpty( rx, ry, doorSpaceReq ) ) {
+      rx = random(width/100, width*0.9);
+      ry = random(height/100, height*0.9);
       loopCount += 1;
       if ( loopCount > maxLoops ) break; // give up looking for empty space and just use whatever
     }
     if ( loopCount > maxLoops ) {
       console.log("maxloops!!!!");
+      return {noEmptySpace:true};
     }
     return {x:rx,y:ry};
   },
-  isSpaceEmpty: function( rx, ry, doorIn ) {
+  isSpaceEmpty: function( rx, ry, doorSpaceReq ) {
     var doorIdKeys = Object.keys(this.doorsActive);
     for (var i=0; i<doorIdKeys.length; i++) {
       var doorId = doorIdKeys[i];
       var door = this.doorsActive[doorId];
-      if ( dist(rx,ry,door.x,door.y) < 1.5* max(doorIn.doorWidth,doorIn.doorHeight,door.doorWidth,door.doorHeight) ) {
+      if ( dist(rx,ry,door.x,door.y) < 1.5* max(doorSpaceReq.width,doorSpaceReq.height,door.doorWidth,door.doorHeight) ) {
         return false;
       }
     }
@@ -149,13 +221,18 @@ DoorMgr.prototype = {
     this.lastDoorId += 1;
     return this.lastDoorId;
   },
-  openNewDoor: function( doorOpenedCallback ) {
-    var door = new Door();
+  openNewDoor: function( doorOpenedCallback, doorType ) {
+    var emptySpaceXY = this.findEmptySpace({width:DOOR_WIDTH,height:DOOR_HEIGHT});
+    if ( emptySpaceXY.noEmptySpace ) {
+      // no room for a new door
+      return false;
+    }
+    var door = new Door(doorType);
     door.doorId = this.getNextDoorId();
-    var emptySpaceXY = this.findEmptySpace(door);
     door.setPos( emptySpaceXY.x, emptySpaceXY.y );
     this.doorsActive[door.doorId] = door;
     door.open( doorOpenedCallback );
+    return door;
   },
   closeDoorById: function( doorId ) {
     var door = this.getDoorById( doorId );
@@ -229,7 +306,7 @@ DoorMgr.prototype = {
 
 };
 
-function Door() {
+function Door( doorType ) {
 
   this.doorId = -1;
   this.state = 'closed';
@@ -262,15 +339,21 @@ function Door() {
   // this.isClosing = false;
   // this.isClosed = true;
 
-  var pickDoorSound = function() {
-    var rndIndex = floor(random(doorSounds.length));
-    var doorSound = doorSounds[rndIndex];
+  var pickDoorSound = function(doorType) {
+    var doorSoundsArr;
+    if ( !doorType ) {
+      doorSoundsArr = doorSounds; //all door sounds
+    } else {
+      doorSoundsArr = doorSoundsByType[doorType];
+    }
+    var rndIndex = floor(random(doorSoundsArr.length));
+    var doorSound = doorSoundsArr[rndIndex];
     return doorSound;
   };
-  this.doorSound = pickDoorSound();
+  this.doorSound = pickDoorSound(doorType);
 
-  this.doorWidth = 100; //random(100,100);
-  this.doorHeight = 100; //random(100,200);
+  this.doorWidth = DOOR_WIDTH; //random(100,100);
+  this.doorHeight = DOOR_HEIGHT; //random(100,200);
 
   this.openingDuration = this.doorSound.open.duration * 1000 * 0.8;
   this.closingDuration = this.doorSound.close.duration * 1000 * 0.8;
@@ -281,6 +364,7 @@ function Door() {
   this.STATE_CLOSING = 'closing';
 
   this.doorOpenedCallback = null;
+  this.doorClosedCallback = null;
 }
 
 Door.prototype = {
@@ -297,6 +381,9 @@ Door.prototype = {
   },
   setStateToClosed: function() {
     this.state = this.STATE_CLOSED;
+    if ( this.doorClosedCallback ) {
+      this.doorClosedCallback( this );
+    }
   },
   setStateToOpening: function() {
     this.state = this.STATE_OPENING;
@@ -334,9 +421,12 @@ Door.prototype = {
     this.openStartTime = millis();
     this.doorSound.open.file.play();
   },
-  close: function() {
+  close: function( doorClosedCallbackIn ) {
     if ( !this.isOpen() ) {
       return;
+    }
+    if ( doorClosedCallbackIn ) {
+      this.doorClosedCallback = doorClosedCallbackIn;
     }
     this.setStateToClosing();
     this.closeStartTime = millis(); // maybe modify this if close() was called while door was opening
