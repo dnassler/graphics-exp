@@ -167,7 +167,7 @@ function mousePressed() {
 }
 
 function scene0() {
-  scene1();
+  scene7();
 
 }
 
@@ -533,6 +533,76 @@ function scene6done() {
   }
 }
 
+// in-progress
+function scene7() {
+  var doorType = 'all';
+  var doorY = height/2 - DOOR_HEIGHT/2;
+  var numDoors = 6;
+  var dArr = [];
+  for ( var i=0; i<numDoors; i++ ) {
+    window.setTimeout(function(){
+      var d = doorMgr.openNewDoor(null, doorType, null, null, doorY);
+      if ( d ) {
+        dArr.push( d );
+      }
+    }, random(5000));
+  }
+  window.setTimeout( function() {
+    for ( var i=0; i<dArr.length; i++ ) {
+      var d = dArr[i];
+      (function(door){
+        window.setTimeout( function() {
+          door.close();
+        }, random(1000,5000) );
+      })(d);
+    }
+  }, 5500);
+  // TODO: improve the transition to scene3 by keeping track of when the last door closes (which is random but max 5000ms)
+  window.setTimeout( function() {
+    scene7done();
+  }, random(8000,10000));
+
+}
+
+function scene7done() {
+  pickNextScene('scene7');
+}
+
+function pickNextScene( fromSceneId ) {
+  var sceneArr = ['scene1','scene2','scene3','scene4','scene5','scene6a','scene6','scene7'];
+  var nextSceneId;
+  while ( !nextSceneId ) {
+    var i = floor(random(sceneArr.length));
+    if ( sceneArr[i] != fromSceneId ) {
+      nextSceneId = sceneArr[i];
+      break;
+    }
+  }
+  gotoScene( nextSceneId );
+}
+function gotoScene( sceneId ) {
+  if ( sceneId == 'scene1') {
+    scene1();
+  } else if (sceneId == 'scene2') {
+    scene2();
+  } else if (sceneId == 'scene3') {
+    scene3();
+  } else if (sceneId == 'scene4') {
+    scene4();
+  } else if (sceneId == 'scene5') {
+    scene5();
+  } else if (sceneId == 'scene6') {
+    scene6();
+  } else if (sceneId == 'scene6a') {
+    scene6a();
+  } else if (sceneId == 'scene7') {
+    scene7();
+  } else if (sceneId == 'scene8') {
+    scene8();
+  } else if (sceneId == 'scene9') {
+    scene9();
+  }
+}
 
 function DoorMgr() {
 
@@ -544,19 +614,23 @@ function DoorMgr() {
 
 DoorMgr.prototype = {
   findEmptySpace: function(doorSpaceReq) {
-    var rx = null;
-    var ry = null;
-    var maxLoops = 1000;
-    var loopCount = 0;
-    while ( !rx || !this.isSpaceEmpty( rx, ry, doorSpaceReq ) ) {
-      rx = random(width/100, width*0.9);
-      ry = random(height/100, height*0.9);
-      loopCount += 1;
-      if ( loopCount > maxLoops ) break; // give up looking for empty space and just use whatever
-    }
-    if ( loopCount > maxLoops ) {
-      console.log("maxloops!!!!");
-      return {noEmptySpace:true};
+    var rxIn = doorSpaceReq.x;
+    var ryIn = doorSpaceReq.y;
+    var rx = rxIn;
+    var ry = ryIn;
+    if ( !rx || !ry ) {
+      var maxLoops = 1000;
+      var loopCount = 0;
+      while ( loopCount == 0 || !this.isSpaceEmpty( rx, ry, doorSpaceReq ) ) {
+        rx = rxIn || random(width/100, width*0.9);
+        ry = ryIn || random(height/100, height*0.9);
+        loopCount += 1;
+        if ( loopCount > maxLoops ) break; // give up looking for empty space and just use whatever
+      }
+      if ( loopCount > maxLoops ) {
+        console.log("maxloops!!!!");
+        return {noEmptySpace:true};
+      }
     }
     return {x:rx,y:ry};
   },
@@ -575,16 +649,22 @@ DoorMgr.prototype = {
     this.lastDoorId += 1;
     return this.lastDoorId;
   },
-  openNewDoor: function( doorOpenedCallback, doorType, keepAlive ) {
-    var emptySpaceXY = this.findEmptySpace({width:DOOR_WIDTH,height:DOOR_HEIGHT});
-    if ( emptySpaceXY.noEmptySpace ) {
-      // no room for a new door
-      return false;
+  openNewDoor: function( doorOpenedCallback, doorType, keepAlive, x, y ) {
+    var xy;
+    if ( !x || !y ) {
+      var emptySpaceXY = this.findEmptySpace({width:DOOR_WIDTH,height:DOOR_HEIGHT,x:x,y:y});
+      if ( emptySpaceXY.noEmptySpace ) {
+        // no room for a new door
+        return false;
+      }
+      xy = emptySpaceXY;
+    } else {
+      xy = {x:x,y:y};
     }
     var door = new Door(doorType);
     door.doorId = this.getNextDoorId();
     door.keepAlive = keepAlive;
-    door.setPos( emptySpaceXY.x, emptySpaceXY.y );
+    door.setPos( xy.x, xy.y );
     this.doorsActive[door.doorId] = door;
     door.open( doorOpenedCallback );
     return door;
@@ -698,8 +778,14 @@ function Door( doorType ) {
     var doorSoundsArr;
     if ( !doorType ) {
       doorSoundsArr = doorSoundsByType['horizontal'].concat(doorSoundsByType['vertical']);//doorSounds; //all door sounds
+    } else if ( doorType instanceof Array ) {
+      // not supported yet
     } else {
-      doorSoundsArr = doorSoundsByType[doorType];
+      if (doorType == 'all') {
+        doorSoundsArr = doorSounds;
+      } else {
+        doorSoundsArr = doorSoundsByType[doorType];
+      }
     }
     var rndIndex = floor(random(doorSoundsArr.length));
     var doorSound = doorSoundsArr[rndIndex];
