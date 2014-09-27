@@ -6,6 +6,10 @@ var doorClose;
 var doorSlideOpen1;
 var doorSlideClose1;
 
+var doorSqueak1;
+var doorSqueak2;
+var doorCloseHard1;
+
 var doorSounds = [];
 var doorSoundsByType = {};
 
@@ -22,6 +26,9 @@ function preload() {
   doorSlideOpen1 = loadSound("Sep_25_2014-010-slideopen1.mp3");
   doorSlideClose1 = loadSound("Sep_25_2014-010-slideclose1.mp3");
 
+  doorSqueak2 = loadSound("Sep_25_2014-007_squeak2.mp3");
+  doorSqueak1 = loadSound("Sep_25_2014-009_squeak1.mp3");
+  doorCloseHard1 = loadSound("Sep_25_2014-007_doorCloseHard1.mp3");
 }
 
 function setup() {
@@ -50,26 +57,57 @@ function setup() {
   reverb.process( doorClose );
   reverb.process( doorSlideOpen1 );
   reverb.process( doorSlideClose1 );
+  reverb.process( doorSqueak1 );
+  reverb.process( doorSqueak2 );
+  reverb.process( doorCloseHard1 );
 
   doorOpen.setVolume(5);
   doorOpen.rate(.5);
   doorClose.setVolume(5);
   doorClose.rate(.5);
-  var doorOpenDur = doorOpen.duration() / .5;
-  var doorCloseDur = doorClose.duration() / .5;
+  var doorOpenDur = doorOpen.duration() / .5 * .8;
+  var doorCloseDur = doorClose.duration() / .5 * .8;
 
   doorSlideOpen1.setVolume(5);
   doorSlideOpen1.rate(.75);
   doorSlideClose1.setVolume(5);
   doorSlideClose1.rate(.75);
-  var doorSlideOpen1Dur = doorSlideOpen1.duration() / .75;
-  var doorSlideClose1Dur = doorSlideClose1.duration() / .75;
+  var doorSlideOpen1Dur = doorSlideOpen1.duration() / .75 * .8;
+  var doorSlideClose1Dur = doorSlideClose1.duration() / .75 * .8;
+
+  doorSqueak1.rate(.5);
+  doorSqueak1.setVolume(2);
+
+  doorSqueak2.rate(.5);
+  doorSqueak2.setVolume(2);
+
+  doorCloseHard1.rate(.5);
+  doorCloseHard1.setVolume(.5);
+
+  // doorOpen.play();
+  // window.setTimeout( function(){
+  //   doorSqueak1.play();
+  // }, 5000 );
+  // window.setTimeout( function(){
+  //   doorSqueak2.play();
+  // }, 10000 );
+  // window.setTimeout( function(){
+  //   doorCloseHard1.play();
+  // }, 15000 );
+
 
   doorSounds.push({
     doorType: 'horizontal',
     open: {file:doorOpen,duration:doorOpenDur},
     close: {file:doorClose,duration:doorCloseDur}
     });
+  doorSounds.push({
+    doorType: 'horizontal2',
+    //open: {file:doorSqueak2,duration:doorSqueak2.duration()/.3},//Math.easeOutQuint
+    open: {file:doorSqueak2,duration:doorSqueak2.duration()/.5},//Math.easeOutQuint
+    close: {file:doorCloseHard1,duration:doorCloseHard1.duration()/.5*.7}
+    });
+
   doorSounds.push({
     doorType: 'vertical',
     open: {file:doorSlideOpen1,duration:doorSlideOpen1Dur},
@@ -124,18 +162,19 @@ function mousePressed() {
     window.setTimeout(function() {
       console.log("about to close door:"+door.doorId);
       door.close();
-    }, 5000);
-  });
+    }, 3000);
+  }, 'horizontal2');
 }
 
 function scene0() {
   scene1();
+
 }
 
 function scene1() {
   var d1 = doorMgr.openNewDoor();
   var d2 = doorMgr.openNewDoor();
-  if ( random(2) < 1 ) {
+  if ( random(10) < 7 ) {
     window.setTimeout(function() {
       var d3 = doorMgr.openNewDoor(
         function() {
@@ -165,7 +204,7 @@ function scene1() {
   }, 5000);
 }
 function scene1done() {
-  var r = random(5);
+  var r = random(7);
   if ( r < 1 ) {
     scene1();
   } else if ( r < 2 ) {
@@ -174,8 +213,10 @@ function scene1done() {
     scene3();
   } else if ( r < 4 ){
     scene4();
-  } else {
+  } else if ( r < 5 ){
     scene5();
+  } else {
+    scene6a();
   }
 }
 
@@ -192,6 +233,8 @@ function scene2done() {
     scene3();
   } else if ( r < 2 ) {
     scene4();
+  } else if ( r < 3 ) {
+    scene6();
   } else {
     scene1();
   }
@@ -222,13 +265,15 @@ function scene3() {
   }, random(5000,9000));
 }
 function scene3done() {
-  var r = random(5);
+  var r = random(6);
   if ( r < 1 ) {
     scene4();
   } else if ( r < 2 ) {
     scene5();
   } else if ( r < 3 ){
     scene2();
+  } else if ( r < 4 ){
+    scene6a();
   } else {
     scene1();
   }
@@ -277,16 +322,24 @@ function scene4() {
   });
 }
 function scene4done() {
-  if ( random(2) < 1 ) {
-    scene1();
-  } else {
+  var r = random(6);
+  if ( r < 1 ) {
+    scene4();
+  } else if ( r < 2 ) {
     scene5();
+  } else if ( r < 3 ){
+    scene2();
+  } else if ( r < 4 ){
+    scene3();
+  } else {
+    scene1();
   }
 }
 function scene5() {
-  // do something different
+
   var numDoors = floor(random(10,20)); // TODO: this value MIGHT not match the final number of doors added to dArr (if the doors don't all fit for example)
   var scene5variantCode = floor(random(2));
+  var scene5doorType = random(2)<1 ? 'vertical' : 'horizontal2';
   var openCount = 0;
   var closedCount = 0;
   var lastOpenTurnCount = 0;
@@ -310,7 +363,7 @@ function scene5() {
         //     );
         //   } , random(2000,4000));
         // }
-        ,'vertical',keepAlive);
+        , scene5doorType, keepAlive);
       if ( d ) {
         dArr.push( d );
       }
@@ -416,6 +469,70 @@ function scene5done() {
     scene4();
   }
 }
+
+function scene6a() {
+  doorMgr.openNewDoor( function( door ) {
+    window.setTimeout(function() {
+      door.close(window.setTimeout(function(){
+        scene6adone();
+      },3000));
+    }, 3000);
+  }, 'horizontal2');
+}
+function scene6adone() {
+  var r = random(6);
+  if ( r < 1 ) {
+    scene4();
+  } else if ( r < 2 ) {
+    scene5();
+  } else if ( r < 3 ){
+    scene2();
+  } else if ( r < 4 ){
+    scene3();
+  } else {
+    scene1();
+  }
+}
+
+function scene6() {
+  var numDoors = random(5,10);
+  var dArr = [];
+  for ( var i=0; i<numDoors; i++ ) {
+    var d = doorMgr.openNewDoor(null,'horizontal2');
+    if ( d ) {
+      dArr.push( d );
+    }
+  }
+  window.setTimeout( function() {
+    for ( var i=0; i<numDoors; i++ ) {
+      var d = dArr[i];
+      (function(door){
+        window.setTimeout( function() {
+          door.close();
+        }, random(1000,5000) );
+      })(d);
+    }
+  }, 3000);
+  // TODO: improve the transition to scene3 by keeping track of when the last door closes (which is random but max 5000ms)
+  window.setTimeout( function() {
+    scene6done();
+  }, random(5000,9000));
+}
+function scene6done() {
+  var r = random(6);
+  if ( r < 1 ) {
+    scene4();
+  } else if ( r < 2 ) {
+    scene5();
+  } else if ( r < 3 ){
+    scene2();
+  } else if ( r < 4 ){
+      scene3();
+  } else {
+    scene1();
+  }
+}
+
 
 function DoorMgr() {
 
@@ -580,7 +697,7 @@ function Door( doorType ) {
   var pickDoorSound = function(doorType) {
     var doorSoundsArr;
     if ( !doorType ) {
-      doorSoundsArr = doorSounds; //all door sounds
+      doorSoundsArr = doorSoundsByType['horizontal'].concat(doorSoundsByType['vertical']);//doorSounds; //all door sounds
     } else {
       doorSoundsArr = doorSoundsByType[doorType];
     }
@@ -593,8 +710,10 @@ function Door( doorType ) {
   this.doorWidth = DOOR_WIDTH; //random(100,100);
   this.doorHeight = DOOR_HEIGHT; //random(100,200);
 
-  this.openingDuration = this.doorSound.open.duration * 1000 * 0.8;
-  this.closingDuration = this.doorSound.close.duration * 1000 * 0.8;
+  //this.openingDuration = this.doorSound.open.duration * 1000 * 0.8;
+  //this.closingDuration = this.doorSound.close.duration * 1000 * 0.8;
+  this.openingDuration = this.doorSound.open.duration * 1000;
+  this.closingDuration = this.doorSound.close.duration * 1000;
 
   this.STATE_OPEN = 'open';
   this.STATE_CLOSED = 'closed';
@@ -717,6 +836,10 @@ Door.prototype = {
 
         dw = Math.easeInOutCubic( this.fractionOpen(), 0, this.doorWidth, 1 );
 
+      } else if ( this.doorSound.doorType === 'horizontal2' ) {
+
+        dw = Math.easeOutQuad( this.fractionOpen(), 0, this.doorWidth, 1 );
+
       }
 
     } else if ( this.isClosing() ) {
@@ -728,6 +851,10 @@ Door.prototype = {
       } else if ( this.doorSound.doorType === 'horizontal' ) {
 
         dw = Math.easeOutCubic( this.fractionClosed(), this.doorWidth, -this.doorWidth, 1 );
+
+      } else if ( this.doorSound.doorType === 'horizontal2' ) {
+
+        dw = Math.easeOutBounce( this.fractionClosed(), this.doorWidth, -this.doorWidth, 1 );
 
       }
 
@@ -797,4 +924,53 @@ Math.easeOutCubic = function (t, b, c, d) {
 	t /= d;
 	t--;
 	return c*(t*t*t + 1) + b;
+};
+
+Math.easeInCubic = function (t, b, c, d) {
+	t /= d;
+	return c*t*t*t + b;
+};
+
+Math.easeInOutExpo = function (t, b, c, d) {
+	t /= d/2;
+	if (t < 1) return c/2 * Math.pow( 2, 10 * (t - 1) ) + b;
+	t--;
+	return c/2 * ( -Math.pow( 2, -10 * t) + 2 ) + b;
+};
+
+Math.easeOutBounce = function (t, b, c, d) {
+  if ((t/=d) < (1/2.75)) {
+   return c*(7.5625*t*t) + b;
+  } else if (t < (2/2.75)) {
+   return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+  } else if (t < (2.5/2.75)) {
+   return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+  } else {
+   return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+  }
+};
+
+Math.easeOutQuint = function (t, b, c, d) {
+	t /= d;
+	t--;
+	return c*(t*t*t*t*t + 1) + b;
+};
+
+Math.easeInOutQuint = function (t, b, c, d) {
+	t /= d/2;
+	if (t < 1) return c/2*t*t*t*t*t + b;
+	t -= 2;
+	return c/2*(t*t*t*t*t + 2) + b;
+};
+
+Math.easeInOutQuad = function (t, b, c, d) {
+	t /= d/2;
+	if (t < 1) return c/2*t*t + b;
+	t--;
+	return -c/2 * (t*(t-2) - 1) + b;
+};
+
+Math.easeOutQuad = function (t, b, c, d) {
+	t /= d;
+	return -c * t*(t-2) + b;
 };
