@@ -98,7 +98,7 @@ function setup() {
   //   doorSlideClose1.play();
   // }, 5000 );
 
-  scene1();
+  scene0();
 }
 
 function draw() {
@@ -128,16 +128,55 @@ function mousePressed() {
   });
 }
 
+function scene0() {
+  scene1();
+}
+
 function scene1() {
   var d1 = doorMgr.openNewDoor();
   var d2 = doorMgr.openNewDoor();
+  if ( random(2) < 1 ) {
+    window.setTimeout(function() {
+      var d3 = doorMgr.openNewDoor(
+        function() {
+          window.setTimeout(function() {
+            var d4 = doorMgr.openNewDoor( function() {
+              window.setTimeout(function() {d3.close();},random(1000));
+              window.setTimeout(function() {d4.close();},random(1000));
+            } );
+          },random(1000));
+        }, 'vertical'
+      );
+      var d5 = doorMgr.openNewDoor(
+        function() {
+          window.setTimeout(function() {
+            var d6 = doorMgr.openNewDoor( function() {
+              window.setTimeout(function() {d5.close();},random(1000));
+              window.setTimeout(function() {d6.close();},random(1000));
+            });
+          },random(1000));
+        }, 'vertical'
+      );
+    }, random(0,4000) );
+  }
   window.setTimeout( function() {
     d1.close();
     d2.close( scene1done );
   }, 5000);
 }
 function scene1done() {
-  scene2();
+  var r = random(5);
+  if ( r < 1 ) {
+    scene1();
+  } else if ( r < 2 ) {
+    scene2();
+  } else if ( r < 3 ){
+    scene3();
+  } else if ( r < 4 ){
+    scene4();
+  } else {
+    scene5();
+  }
 }
 
 function scene2() {
@@ -148,7 +187,14 @@ function scene2() {
   });
 }
 function scene2done() {
-  scene3();
+  var r = random(10);
+  if ( r < 1 ) {
+    scene3();
+  } else if ( r < 2 ) {
+    scene4();
+  } else {
+    scene1();
+  }
 }
 
 function scene3() {
@@ -176,9 +222,200 @@ function scene3() {
   }, random(5000,9000));
 }
 function scene3done() {
-  scene1();
+  var r = random(5);
+  if ( r < 1 ) {
+    scene4();
+  } else if ( r < 2 ) {
+    scene5();
+  } else if ( r < 3 ){
+    scene2();
+  } else {
+    scene1();
+  }
 }
 
+function scene4() {
+  var d1,d2,d3,d4,d5;
+  d1 = doorMgr.openNewDoor(function() {
+    d2 = doorMgr.openNewDoor(function() {
+      d3 = doorMgr.openNewDoor(function() {
+        d4 = doorMgr.openNewDoor(function() {
+          d5 = doorMgr.openNewDoor(
+            function() {
+
+              if ( random(2) < 1 ) {
+                d1.close( function() {
+                  d2.close( function() {
+                    d3.close( function() {
+                      d4.close( function() {
+                        window.setTimeout(function(){
+                          d5.close( function() {
+                            scene4done();
+                          });
+                        }, random(1000));
+                      });
+                    });
+                  });
+                });
+              } else {
+                d1.close();
+                d2.close( function() {
+                  d3.close();
+                  d4.close();
+                  d5.close( function() {
+                    scene4done();
+                  });
+                });
+
+              }
+
+            }
+          );
+        });
+      });
+    });
+  });
+}
+function scene4done() {
+  if ( random(2) < 1 ) {
+    scene1();
+  } else {
+    scene5();
+  }
+}
+function scene5() {
+  // do something different
+  var numDoors = floor(random(10,20)); // TODO: this value MIGHT not match the final number of doors added to dArr (if the doors don't all fit for example)
+  var scene5variantCode = floor(random(2));
+  var openCount = 0;
+  var closedCount = 0;
+  var lastOpenTurnCount = 0;
+  //var closeTimeRandom = random(2)<1 ? true:false;
+  var dArr = [];
+  for ( var i=0; i<numDoors; i++ ) {
+    window.setTimeout(function() {
+      var keepAlive = floor(random(2,5));
+      var d = doorMgr.openNewDoor( scene5doorOpenEvent
+        // function() {
+        //   openCount += 1;
+        //   window.setTimeout(function() {
+        //     d.close( scene5doorCloseEvent
+        //       // function() {
+        //       //   // check if everything is done
+        //       //   closedCount += 1;
+        //       //   if ( closedCount == numDoors && openCount == closedCount ) {
+        //       //     scene5done();
+        //       //   }
+        //       // }
+        //     );
+        //   } , random(2000,4000));
+        // }
+        ,'vertical',keepAlive);
+      if ( d ) {
+        dArr.push( d );
+      }
+    }, random(3000));
+  }
+
+  var scene5doorOpenEvent = function ( door ) {
+
+    openCount += 1;
+
+    if ( scene5variantCode == 1 && door.keepAlive <= 1) {
+
+      // this door is open but the next time it closes, it will be dead
+      // so do not set a timeout to close it and instead wait until the
+      // scene done signal occurs
+      lastOpenTurnCount += 1;
+      if ( lastOpenTurnCount == numDoors ) {
+        window.setTimeout(function() {
+          for (var i=0; i<numDoors; i++) {
+            var d = dArr[i];
+            if ( i == numDoors-1 ) {
+              d.close( function() {
+                scene5done();
+              });
+            } else {
+              d.close();
+            }
+          }
+        }, random(5000,10000));
+
+      }
+
+    } else {
+
+      window.setTimeout( function() {
+        door.close( function() {
+
+          closedCount += 1;
+
+          // check if everything is done
+          if ( door.keepAlive ) {
+            door.keepAlive -= 1;
+            if ( door.keepAlive < 0 ) {
+              door.keepAlive = 0;
+            } else if ( door.keepAlive > 0 ) {
+              // reopen in random time
+              openCount -= 1;
+              closedCount -= 1;
+              window.setTimeout(function(){
+                door.open( scene5doorOpenEvent
+                  // function() {
+                  // openCount += 1;
+                  // window.setTimeout(function(){
+                  //   door.close( scene5doorCloseEvent );
+                  // }, random(2000,4000));
+                  // }
+                  );
+              }, random(500,4000));
+            }
+          }
+
+          console.log("numDoors = "+numDoors+", openCount = "+openCount+", closedCount = "+closedCount);
+          if ( closedCount == numDoors && openCount == closedCount ) {
+            console.log("******* all closed *******");
+            scene5done();
+          }
+
+        });
+      }, random(500,4000));
+
+    }
+
+
+  }
+
+  // window.setTimeout( function() {
+  //   for ( var i=0; i<numDoors; i++ ) {
+  //     var d = dArr[i];
+  //     (function(door){
+  //       window.setTimeout( function() {
+  //         door.close();
+  //       }, random(1000) );
+  //     })(d);
+  //   }
+  // }, random(3000));
+
+  // window.setTimeout( function() {
+  //   scene5done();
+  // }, random(5000,9000));
+
+}
+
+
+function scene5done() {
+  var r = random(4);
+  if ( r < 1 ) {
+    scene1();
+  } else if ( r < 2 ) {
+    scene2();
+  } else if ( r < 3 ){
+    scene3();
+  } else {
+    scene4();
+  }
+}
 
 function DoorMgr() {
 
@@ -221,7 +458,7 @@ DoorMgr.prototype = {
     this.lastDoorId += 1;
     return this.lastDoorId;
   },
-  openNewDoor: function( doorOpenedCallback, doorType ) {
+  openNewDoor: function( doorOpenedCallback, doorType, keepAlive ) {
     var emptySpaceXY = this.findEmptySpace({width:DOOR_WIDTH,height:DOOR_HEIGHT});
     if ( emptySpaceXY.noEmptySpace ) {
       // no room for a new door
@@ -229,6 +466,7 @@ DoorMgr.prototype = {
     }
     var door = new Door(doorType);
     door.doorId = this.getNextDoorId();
+    door.keepAlive = keepAlive;
     door.setPos( emptySpaceXY.x, emptySpaceXY.y );
     this.doorsActive[door.doorId] = door;
     door.open( doorOpenedCallback );
@@ -290,7 +528,7 @@ DoorMgr.prototype = {
       var doorId = doorIdKeys[i];
       var door = this.doorsActive[doorId];
       door.update();
-      if ( door.isClosed() ) {
+      if ( door.isClosed() && !door.keepAlive ) {
         this.removeClosedDoor( door );
       }
     }
