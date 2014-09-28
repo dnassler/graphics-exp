@@ -154,6 +154,11 @@ function draw() {
   // }
 }
 
+// TODO (maybe/maybenot):
+// add more sounds to project
+// for example sounds that might have the sound of pulling a heavy thing
+// or sounds of shuffling feet on a smoth hallway
+// or sounds of a plate pulling around a table or a glass of water
 
 function mousePressed() {
   //toggleDoor();
@@ -167,8 +172,9 @@ function mousePressed() {
 }
 
 function scene0() {
-  scene7();
-
+  //scene7();
+  scene6a();
+  //scene10();
 }
 
 function scene1() {
@@ -204,20 +210,21 @@ function scene1() {
   }, 5000);
 }
 function scene1done() {
-  var r = random(7);
-  if ( r < 1 ) {
-    scene1();
-  } else if ( r < 2 ) {
-    scene2();
-  } else if ( r < 3 ){
-    scene3();
-  } else if ( r < 4 ){
-    scene4();
-  } else if ( r < 5 ){
-    scene5();
-  } else {
-    scene6a();
-  }
+  pickNextScene('scene1');
+  // var r = random(7);
+  // if ( r < 1 ) {
+  //   scene1();
+  // } else if ( r < 2 ) {
+  //   scene2();
+  // } else if ( r < 3 ){
+  //   scene3();
+  // } else if ( r < 4 ){
+  //   scene4();
+  // } else if ( r < 5 ){
+  //   scene5();
+  // } else {
+  //   scene6a();
+  // }
 }
 
 function scene2() {
@@ -228,16 +235,21 @@ function scene2() {
   });
 }
 function scene2done() {
-  var r = random(10);
-  if ( r < 1 ) {
-    scene3();
-  } else if ( r < 2 ) {
-    scene4();
-  } else if ( r < 3 ) {
-    scene6();
-  } else {
+  if ( random(2) < 1 ) {
     scene1();
+    return;
   }
+  pickNextScene('scene2');
+  // var r = random(10);
+  // if ( r < 1 ) {
+  //   scene3();
+  // } else if ( r < 2 ) {
+  //   scene4();
+  // } else if ( r < 3 ) {
+  //   scene6();
+  // } else {
+  //   scene1();
+  // }
 }
 
 function scene3() {
@@ -265,18 +277,23 @@ function scene3() {
   }, random(5000,9000));
 }
 function scene3done() {
-  var r = random(6);
-  if ( r < 1 ) {
-    scene4();
-  } else if ( r < 2 ) {
-    scene5();
-  } else if ( r < 3 ){
-    scene2();
-  } else if ( r < 4 ){
-    scene6a();
-  } else {
+  if ( random(5) < 2 ) {
     scene1();
+    return;
   }
+  pickNextScene('scene9');
+  // var r = random(6);
+  // if ( r < 1 ) {
+  //   scene4();
+  // } else if ( r < 2 ) {
+  //   scene5();
+  // } else if ( r < 3 ){
+  //   scene2();
+  // } else if ( r < 4 ){
+  //   scene6a();
+  // } else {
+  //   scene1();
+  // }
 }
 
 function scene4() {
@@ -322,24 +339,29 @@ function scene4() {
   });
 }
 function scene4done() {
-  var r = random(6);
-  if ( r < 1 ) {
-    scene4();
-  } else if ( r < 2 ) {
-    scene5();
-  } else if ( r < 3 ){
-    scene2();
-  } else if ( r < 4 ){
-    scene3();
-  } else {
+  if ( random(5) < 2 ) {
     scene1();
+    return;
   }
+  pickNextScene('scene4');
+  // var r = random(6);
+  // if ( r < 1 ) {
+  //   scene4();
+  // } else if ( r < 2 ) {
+  //   scene5();
+  // } else if ( r < 3 ){
+  //   scene2();
+  // } else if ( r < 4 ){
+  //   scene3();
+  // } else {
+  //   scene1();
+  // }
 }
 function scene5() {
 
   var numDoors = floor(random(10,20)); // TODO: this value MIGHT not match the final number of doors added to dArr (if the doors don't all fit for example)
   var scene5variantCode = floor(random(2));
-  var scene5doorType = random(2)<1 ? 'vertical' : 'horizontal2';
+  var scene5doorType = random(10)<5 ? 'vertical' : 'horizontal2';
   var openCount = 0;
   var closedCount = 0;
   var lastOpenTurnCount = 0;
@@ -458,40 +480,44 @@ function scene5() {
 
 
 function scene5done() {
-  var r = random(4);
-  if ( r < 1 ) {
-    scene1();
-  } else if ( r < 2 ) {
-    scene2();
-  } else if ( r < 3 ){
-    scene3();
-  } else {
-    scene4();
-  }
+  pickNextScene('scene5');
+  // var r = random(4);
+  // if ( r < 1 ) {
+  //   scene1();
+  // } else if ( r < 2 ) {
+  //   scene2();
+  // } else if ( r < 3 ){
+  //   scene3();
+  // } else {
+  //   scene4();
+  // }
 }
 
 function scene6a() {
   doorMgr.openNewDoor( function( door ) {
     window.setTimeout(function() {
-      door.close(window.setTimeout(function(){
-        scene6adone();
-      },3000));
+      door.close( function() {
+        window.setTimeout(function(){
+          scene6adone();
+        },3000);
+      });
     }, 3000);
   }, 'horizontal2');
 }
 function scene6adone() {
-  var r = random(6);
-  if ( r < 1 ) {
-    scene4();
-  } else if ( r < 2 ) {
-    scene5();
-  } else if ( r < 3 ){
-    scene2();
-  } else if ( r < 4 ){
-    scene3();
-  } else {
-    scene1();
-  }
+  pickNextScene('scene6a');
+  // var r = random(6);
+  // if ( r < 1 ) {
+  //   scene4();
+  // } else if ( r < 2 ) {
+  //   scene5();
+  // } else if ( r < 3 ){
+  //   scene2();
+  // } else if ( r < 4 ){
+  //   scene3();
+  // } else {
+  //   scene1();
+  // }
 }
 
 function scene6() {
@@ -519,21 +545,21 @@ function scene6() {
   }, random(5000,9000));
 }
 function scene6done() {
-  var r = random(6);
-  if ( r < 1 ) {
-    scene4();
-  } else if ( r < 2 ) {
-    scene5();
-  } else if ( r < 3 ){
-    scene2();
-  } else if ( r < 4 ){
-      scene3();
-  } else {
-    scene1();
-  }
+  pickNextScene('scene6');
+  // var r = random(6);
+  // if ( r < 1 ) {
+  //   scene4();
+  // } else if ( r < 2 ) {
+  //   scene5();
+  // } else if ( r < 3 ){
+  //   scene2();
+  // } else if ( r < 4 ){
+  //     scene3();
+  // } else {
+  //   scene1();
+  // }
 }
 
-// in-progress
 function scene7() {
   var doorType = 'all';
   var doorY = height/2 - DOOR_HEIGHT/2;
@@ -568,8 +594,316 @@ function scene7done() {
   pickNextScene('scene7');
 }
 
+
+function scene8() {
+  var doorType = null;
+
+  var doorYcenter = height/2 - DOOR_HEIGHT/2;
+  var numDoors = 0;
+  var numRows = 6;
+  var numDoorsPerRow = 6;
+  var dArr = [];
+
+  for ( var i=0; i<numRows*numDoorsPerRow; i++ ) {
+
+    var rowNum = floor(i / numDoorsPerRow);
+    var colNum = i % numDoorsPerRow;
+    var doorX = (colNum * DOOR_WIDTH) - (numDoorsPerRow*DOOR_WIDTH/2) + width/2;
+    var doorY = rowNum*DOOR_HEIGHT - numRows*DOOR_HEIGHT/2 + height/2;
+
+    (function(dx,dy){
+      window.setTimeout(function(){
+          var d = doorMgr.openNewDoor(null, doorType, null, dx, dy);
+          if ( d ) {
+            dArr.push( d );
+          }
+        }, random(5000))
+    })(doorX,doorY);
+
+  }
+
+  window.setTimeout( function() {
+    for ( var i=0; i<dArr.length; i++ ) {
+      var d = dArr[i];
+      (function(door){
+        window.setTimeout( function() {
+          door.close();
+        }, random(1000,5000) );
+      })(d);
+    }
+  }, 10000);
+  // TODO: improve the transition to scene3 by keeping track of when the last door closes (which is random but max 5000ms)
+  window.setTimeout( function() {
+    scene8done();
+  }, random(15000,15000));
+
+}
+
+function scene8done() {
+  pickNextScene('scene8');
+}
+
+function scene9() {
+  var doorType = null;
+
+  var doorYcenter = height/2 - DOOR_HEIGHT/2;
+  var numDoors = 0;
+  var numRows = 6;
+  var numDoorsPerRow = 6;
+  var doorSpacingX = DOOR_WIDTH+DOOR_WIDTH/2;
+  var doorSpacingY = DOOR_HEIGHT+DOOR_HEIGHT/2;
+  var dArr = [];
+
+  for ( var i=0; i<numRows*numDoorsPerRow; i++ ) {
+
+    var rowNum = floor(i / numDoorsPerRow);
+    var colNum = i % numDoorsPerRow;
+    var doorX = (colNum * doorSpacingX) - (numDoorsPerRow*doorSpacingX/2) + width/2;
+    var doorY = rowNum*doorSpacingY - numRows*doorSpacingY/2 + height/2;
+
+    (function(dx,dy){
+      window.setTimeout(function(){
+          var d = doorMgr.openNewDoor(null, doorType, null, dx, dy);
+          if ( d ) {
+            dArr.push( d );
+          }
+        }, random(5000))
+    })(doorX,doorY);
+
+  }
+
+  window.setTimeout( function() {
+    for ( var i=0; i<dArr.length; i++ ) {
+      var d = dArr[i];
+      (function(door){
+        window.setTimeout( function() {
+          door.close();
+        }, random(1000,5000) );
+      })(d);
+    }
+  }, 10000);
+  // TODO: improve the transition to scene3 by keeping track of when the last door closes (which is random but max 5000ms)
+  window.setTimeout( function() {
+    scene9done();
+  }, random(15000,15000));
+
+}
+
+function scene9done() {
+  pickNextScene('scene9');
+}
+
+function scene10() {
+  console.log("scene10: in");
+
+  var doorType = null;
+
+  var doorYcenter = height/2 - DOOR_HEIGHT/2;
+  var numDoors = 0;
+  var doorSpacingX;
+  var doorSpacingY;
+  var r = random(2);
+  if ( r < 1 ) {
+    doorSpacingX = DOOR_WIDTH+DOOR_WIDTH/2;
+    doorSpacingY = DOOR_HEIGHT+DOOR_HEIGHT/2;
+  } else if ( r < 2 ) {
+    doorSpacingX = DOOR_WIDTH;
+    doorSpacingY = DOOR_HEIGHT;
+  // } else if ( r < 3 ) {
+  //   doorSpacingX = DOOR_WIDTH+DOOR_WIDTH/2;
+  //   doorSpacingY = DOOR_HEIGHT*2;
+  // } else {
+  //   doorSpacingX = DOOR_WIDTH*2;
+  //   doorSpacingY = DOOR_HEIGHT+DOOR_HEIGHT/2;
+  }
+
+  var maxDoorsPerRow = width * .9 / doorSpacingX;
+  var maxDoorsPerCol = height * .9 / doorSpacingY;
+
+  var numRows;
+  var numDoorsPerRow;
+  if ( random(2) < 1 ) {
+    numRows = floor(random(2,floor(maxDoorsPerRow/2)));
+    numDoorsPerRow = floor(random(4,maxDoorsPerRow));
+  } else {
+    numRows = floor(random(4,maxDoorsPerCol));
+    numDoorsPerRow = floor(random(2,floor(maxDoorsPerCol/2)));
+  }
+
+  var skipColNum;
+  var skipRowNum;
+  var doorConfigMode = 0;
+  var doorConfigPicker = 2;//floor(random(4));
+  // numRows=5;
+  // numDoorsPerRow=10;
+
+  if ( (numDoorsPerRow >= 3 || numRows >= 3) && doorConfigPicker == 0 ) {
+
+    // skips either columns or rows
+    doorConfigMode = 1;
+    var skipColumns = false;
+
+    if ( numDoorsPerRow >= 3 && numRows >= 3 ) {
+      // pick either rows or columns to skip
+      if ( random(2) < 1 ) {
+        skipColumns = true;
+      }
+    } else {
+      if ( numDoorsPerRow >= 3 ) {
+        skipColumns = true;
+      }
+    }
+
+    if ( skipColumns ) {
+      skipColNum = floor(random(1,numDoorsPerRow-1));
+    } else {
+      skipRowNum = floor(random(1,numRows-1));
+    }
+
+  } else if ((numDoorsPerRow >= 3 && numRows >= 3) && doorConfigPicker == 1) {
+
+    // skip inner doors leaving only perimeter
+    doorConfigMode = 2;
+    doorType = "horizontal2";
+
+  } else if (doorConfigPicker == 2) {
+    // skip a random door
+    doorConfigMode = 3;
+    skipColNum = floor(random(0,numDoorsPerRow));
+    skipRowNum = floor(random(0,numRows));
+  }
+
+  console.log("doorConfigMode="+doorConfigMode);
+  console.log("numRows="+numRows+", numDoorsPerRow="+numDoorsPerRow+", skipRowNum="+skipRowNum+", skipColNum="+skipColNum);
+
+  // var numRows = 2;
+  // var numDoorsPerRow = 5;
+  var dArr = [];
+
+  for ( var rowNum=0; rowNum<numRows; rowNum++ ) {
+
+    if ( doorConfigMode == 1 ) {
+      if ( skipRowNum && rowNum == skipRowNum ) {
+        continue; // skip this row
+      }
+    }
+
+    for ( var colNum=0; colNum<numDoorsPerRow; colNum++ ) {
+
+      if ( doorConfigMode == 1 ) {
+        if ( skipColNum && colNum == skipColNum ) {
+          continue; // skip this column
+        }
+      } else if ( doorConfigMode == 2 ) {
+        // skip inner
+        if ( !(rowNum == 0 || rowNum == numRows-1 || colNum == 0 || colNum == numDoorsPerRow-1) ) {
+          continue;
+        }
+      } else if ( doorConfigMode == 3 ) {
+        if ( rowNum == skipRowNum && colNum == skipColNum ) {
+          continue;
+        }
+      }
+
+      // var rowNum = floor(i / numDoorsPerRow);
+      // var colNum = i % numDoorsPerRow;
+      var doorX = (colNum * doorSpacingX) - ((numDoorsPerRow*doorSpacingX-(doorSpacingX-DOOR_WIDTH))/2) + width/2;
+      var doorY = rowNum*doorSpacingY - ((numRows*doorSpacingY-(doorSpacingY-DOOR_HEIGHT))/2) + height/2;
+
+      (function(dx,dy){
+        window.setTimeout(function(){
+            var d = doorMgr.openNewDoor(null, doorType, null, dx, dy);
+            if ( d ) {
+              dArr.push( d );
+            }
+          }, random(5000))
+      })(doorX,doorY);
+
+    }
+
+  }
+
+  //doorConfigMode = 3;
+  //skipColNum = floor(random(0,numDoorsPerRow));
+  //skipRowNum = floor(random(0,numRows));
+
+  var closeUp = function(delayTime) {
+    window.setTimeout( function() {
+      for ( var i=0; i<dArr.length; i++ ) {
+        var d = dArr[i];
+        (function(door){
+          window.setTimeout( function() {
+            door.close();
+          }, random(1000,5000) );
+        })(d);
+      }
+
+      window.setTimeout( function() {
+        scene10done();
+      }, random(5500,6000)); // need to fix this (i.e. change time based on if there was a missing column or single door which increases the time before the end)
+
+    }, delayTime);
+  }
+
+  var openDoorWithRandomDelay = function(rowNum,colNum,doorType,timeDelayLimit) {
+    var doorX = (colNum * doorSpacingX) - ((numDoorsPerRow*doorSpacingX-(doorSpacingX-DOOR_WIDTH))/2) + width/2;
+    var doorY = rowNum*doorSpacingY - ((numRows*doorSpacingY-(doorSpacingY-DOOR_HEIGHT))/2) + height/2;
+    window.setTimeout(function(){
+        var d = doorMgr.openNewDoor(null, doorType, null, doorX, doorY);
+        if ( d ) {
+          dArr.push( d );
+        }
+      }, random(timeDelayLimit));
+  }
+
+  if ( doorConfigMode == 1 ) {
+    // open up the missing row/col
+    window.setTimeout(function() {
+      var colNum = skipColNum;
+      var rowNum = skipRowNum;
+      if ( skipColNum ) {
+        // loop through the rows of the missing column
+        for (var rowNum=0; rowNum<numRows; rowNum++) {
+          openDoorWithRandomDelay(rowNum,skipColNum,'horizontal2',0);
+        }
+      } else {
+        // loop through the columns of the missing row
+        for (var colNum=0; colNum<numDoorsPerRow; colNum++) {
+          openDoorWithRandomDelay(skipRowNum,colNum,'horizontal2',0);
+        }
+      }
+      closeUp(3000);
+    }, 9000);
+
+  } else if ( doorConfigMode == 3 ) {
+    // open up the final missing space
+    window.setTimeout(function() {
+      openDoorWithRandomDelay(skipRowNum,skipColNum,'horizontal2',0);
+      closeUp(3000);
+    }, 9000);
+    // window.setTimeout(function() {
+    //   var colNum = skipColNum;
+    //   var rowNum = skipRowNum;
+    //   var doorX = (colNum * doorSpacingX) - ((numDoorsPerRow*doorSpacingX-(doorSpacingX-DOOR_WIDTH))/2) + width/2;
+    //   var doorY = rowNum*doorSpacingY - ((numRows*doorSpacingY-(doorSpacingY-DOOR_HEIGHT))/2) + height/2;
+    //   var d = doorMgr.openNewDoor(null,'horizontal2',null,doorX,doorY);
+    //   dArr.push(d);
+    // }, 10000);
+    //closeUp(13000);
+  } else {
+    closeUp(10000);
+  }
+
+
+}
+
+function scene10done() {
+  pickNextScene('scene10');
+  //scene10();
+}
+
 function pickNextScene( fromSceneId ) {
-  var sceneArr = ['scene1','scene2','scene3','scene4','scene5','scene6a','scene6','scene7'];
+  var sceneArr = ['scene1','scene2','scene3','scene4','scene5','scene6a','scene6','scene7','scene8','scene9','scene10'];
   var nextSceneId;
   while ( !nextSceneId ) {
     var i = floor(random(sceneArr.length));
@@ -601,6 +935,18 @@ function gotoScene( sceneId ) {
     scene8();
   } else if (sceneId == 'scene9') {
     scene9();
+  } else if (sceneId == 'scene10') {
+    scene10();
+  } else if (sceneId == 'scene11') {
+    scene11();
+  } else if (sceneId == 'scene12') {
+    scene12();
+  } else if (sceneId == 'scene13') {
+    scene13();
+  } else if (sceneId == 'scene14') {
+    scene14();
+  } else if (sceneId == 'scene15') {
+    scene15();
   }
 }
 
