@@ -37,7 +37,6 @@ var isFullscreen = false;
 function setup() {
 	isFullscreen = (typeof window.orientation !== 'undefined') ? true: fullscreen(); // if iphone/ipad/iOS fullscreen(true) doesn't work
   var displaySize = checkOrientation();
-  isFullscreen = false;//fullscreen();
   createCanvas(displaySize.width, displaySize.height);
 }
 
