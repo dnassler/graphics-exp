@@ -18,6 +18,7 @@ var doorMgr;
 var DOOR_WIDTH = 100;
 var DOOR_HEIGHT = 100;
 
+
 function preload() {
 
   doorOpen = loadSound("216874__castironcarousel__open-then-close-squeaky-door-Mono-open1.mp3");
@@ -36,8 +37,13 @@ function setup() {
 
   console.log("displayWidth="+displayWidth+", displayHeight="+displayHeight+", windowWidth="+windowWidth+", windowHeight="+windowHeight+", window.innerWidth="+window.innerWidth+", window.innerHeight="+window.innerHeight+", width="+width+", height="+height);
 
-  DOOR_WIDTH = min(width/10,100);
-  DOOR_HEIGHT = DOOR_WIDTH;
+  if ( width > height ) {
+    DOOR_WIDTH = min(floor(width/15)+1,100);
+    DOOR_HEIGHT = DOOR_WIDTH;
+  } else {
+    DOOR_HEIGHT = min(floor(height/15)+1,100);
+    DOOR_WIDTH = DOOR_HEIGHT;
+  }
 
   // var pg = createGraphics(width,height);
   // pg.clear();
@@ -136,7 +142,9 @@ function setup() {
   //   doorSlideClose1.play();
   // }, 5000 );
 
-  scene0();
+  SceneMgr.instance().start();
+
+  //scene0();
 }
 
 function draw() {
@@ -160,23 +168,44 @@ function draw() {
 // or sounds of shuffling feet on a smoth hallway
 // or sounds of a plate pulling around a table or a glass of water
 
-function mousePressed() {
-  //toggleDoor();
-  doorMgr.openNewDoor( function( door ) {
-    console.log("a new door has finished opening: id="+door.doorId+", x="+door.x+", y="+door.y);
-    window.setTimeout(function() {
-      console.log("about to close door:"+door.doorId);
-      door.close();
-    }, 3000);
-  }, 'horizontal2');
-}
+// function mousePressed() {
+//   //toggleDoor();
+//   doorMgr.openNewDoor( function( door ) {
+//     //console.log("a new door has finished opening: id="+door.doorId+", x="+door.x+", y="+door.y);
+//     window.setTimeout(function() {
+//       //console.log("about to close door:"+door.doorId);
+//       door.close();
+//     }, 3000);
+//   }, 'horizontal2');
+// }
 
 function scene0() {
   //scene7();
   scene6a();
   //scene10();
   //scene8();
+  //scene11();
+  //testScene();
 }
+
+function testScene() {
+  doorMgr.openNewDoor( function( door ) {
+    window.setTimeout(function() {
+      door.close( function() {
+        window.setTimeout(function(){
+          testSceneDone();
+        },3000);
+      });
+    }, 3000);
+  }, 'horizontal2');
+}
+function testSceneDone() {
+  console.log('testScene is DONE');
+}
+
+
+// ===
+// ===
 
 function scene1() {
   var d1 = doorMgr.openNewDoor();
@@ -913,6 +942,118 @@ function scene10done() {
   //scene10();
 }
 
+function scene11() {
+
+  // var openDoorWithRandomDelay = function(rowNum,colNum,doorType,timeDelayLimit) {
+  //   var doorX = (colNum * doorSpacingX) - ((numDoorsPerRow*doorSpacingX-(doorSpacingX-DOOR_WIDTH))/2) + width/2;
+  //   var doorY = rowNum*doorSpacingY - ((numRows*doorSpacingY-(doorSpacingY-DOOR_HEIGHT))/2) + height/2;
+  //   window.setTimeout(function(){
+  //       var d = doorMgr.openNewDoor(null, doorType, null, doorX, doorY);
+  //       if ( d ) {
+  //         dArr.push( d );
+  //       }
+  //     }, random(timeDelayLimit));
+  // }
+
+  // var doorType = null;
+
+  // var doorYcenter = height/2 - DOOR_HEIGHT/2;
+  // var numDoors = 0;
+  // var doorSpacingX;
+  // var doorSpacingY;
+  // var r = random(2);
+  // if ( r < 1 ) {
+  //   doorSpacingX = DOOR_WIDTH+DOOR_WIDTH/2;
+  //   doorSpacingY = DOOR_HEIGHT+DOOR_HEIGHT/2;
+  // } else if ( r < 2 ) {
+  //   doorSpacingX = DOOR_WIDTH;
+  //   doorSpacingY = DOOR_HEIGHT;
+  // }
+
+  // var maxDoorsPerRow = width * .9 / doorSpacingX;
+  // var maxDoorsPerCol = height * .9 / doorSpacingY;
+
+  // var numRows;
+  // var numDoorsPerRow;
+  // numRows = floor(random(2,floor(maxDoorsPerRow/2)));
+  // numDoorsPerRow = floor(random(4,maxDoorsPerRow));
+  
+  var openDoorsPromise = function( numNewDoors, doorType, delayTimeMS, randomizeDelay ) {
+    var doorPromiseArr = [];
+    for ( var i=0; i<numNewDoors; i++ ) {
+      doorPromiseArr.push( openDoorPromise( doorType, randomizeDelay ? random(delayTimeMS) : delayTimeMS ) );
+    }
+    return Promise.all( doorPromiseArr );
+  };
+
+  var openDoorPromise = function( doorType, delayTimeMS ) {
+    delayTimeMS = delayTimeMS || 0;
+    var p = new Promise(function ( resolve, reject ) {
+      window.setTimeout( function () {
+        doorMgr.openNewDoor( function( newOpenedDoor ) {
+          resolve( newOpenedDoor );
+        }, doorType);
+      }, delayTimeMS );
+    });
+    return p;
+  };
+
+  var closeDoorPromise = function( door, delayTimeMS ) {
+    delayTimeMS = delayTimeMS || 0;
+    return new Promise(function(resolve,reject){
+      window.setTimeout( function() {
+        door.close( function() {
+          resolve(door);
+        });
+      }, delayTimeMS);
+    });
+  };
+
+  var reopenDoorPromise = function( door, delayTimeMS ) {
+    delayTimeMS = delayTimeMS || 0;
+    return new Promise(function(resolve,reject){
+      window.setTimeout( function() {
+        door.open( function() {
+          resolve(door);
+        });
+      }, delayTimeMS);
+    });
+  };
+
+  var numDoors = 10;
+  var dArr = [];
+  //openDoors( dArr, numDoors, 'vertical' ).then( wait(2000) ).then(closeDoors([dArr[0],dArr[dArr.length-1]]));
+
+  openDoorsPromise(numDoors,'vertical',random(2000),true).then( function(openDoorsArr) {
+    console.log('all doors have been opened: openDoorsArr.length='+openDoorsArr.length);
+    var closePromiseArr = openDoorsArr.map( function(door) {
+      door.keepAlive = true;
+      return closeDoorPromise( door, random(2000) );
+    });
+    return Promise.all( closePromiseArr );
+  }).then( function( closedDoorsArr ) {
+    console.log('all doors closed but kept alive.');
+    var reopenPromiseArr = closedDoorsArr.map( function(door) {
+      return reopenDoorPromise( door, random(2000) );
+    });
+    return Promise.all( reopenPromiseArr );
+  }).then( function( reopenedDoorsArr ){
+    console.log('all doors reopened.');
+    var closePromiseArr = reopenedDoorsArr.map( function(door) {
+      door.keepAlive = false;
+      return closeDoorPromise( door, random(1000) );
+    });
+    return Promise.all( closePromiseArr );
+  }).then( function( closedDoorsArr ){
+    console.log('all doors closed and dead');
+    scene11done();
+  });
+
+}
+function scene11done() {
+  console.log('scene11 is done');
+}
+
 function pickNextScene( fromSceneId ) {
   var sceneArr = ['scene1','scene2','scene3','scene4','scene5','scene6a','scene6','scene7','scene8','scene9','scene10','scene10'];
   var nextSceneId;
@@ -963,30 +1104,36 @@ function gotoScene( sceneId ) {
 
 function DoorMgr() {
 
-  this.doorsActive = {};
+  this.doorsActiveArr = [];
 
   this.lastDoorId = -1;
 
 }
 
 DoorMgr.prototype = {
+
   randomDoorType: function() {
     //doorSoundsByType
     var doorSoundTypes = Object.keys(doorSoundsByType);
     var rIndex = floor(random(doorSoundTypes.length));
     return doorSoundTypes[rIndex];
   },
+  
   findEmptySpace: function(doorSpaceReq) {
     var rxIn = doorSpaceReq.x;
     var ryIn = doorSpaceReq.y;
-    var rx = rxIn;
-    var ry = ryIn;
+    var rx = floor(rxIn);
+    var ry = floor(ryIn);
     if ( !rx || !ry ) {
       var maxLoops = 1000;
       var loopCount = 0;
       while ( loopCount == 0 || !this.isSpaceEmpty( rx, ry, doorSpaceReq ) ) {
-        rx = rxIn || random(width/100, width*0.9);
-        ry = ryIn || random(height/100, height*0.9);
+        if ( !rxIn ) {
+          rx = floor(random(width/100, width*0.9));
+        }
+        if ( !ryIn ) {
+          ry = floor(random(height/100, height*0.9));
+        }
         loopCount += 1;
         if ( loopCount > maxLoops ) break; // give up looking for empty space and just use whatever
       }
@@ -997,25 +1144,101 @@ DoorMgr.prototype = {
     }
     return {x:rx,y:ry};
   },
+  
   isSpaceEmpty: function( rx, ry, doorSpaceReq ) {
-    var doorIdKeys = Object.keys(this.doorsActive);
-    for (var i=0; i<doorIdKeys.length; i++) {
-      var doorId = doorIdKeys[i];
-      var door = this.doorsActive[doorId];
+    var numDoors = this.doorsActiveArr.length;
+    for ( var i=0; i<numDoors; i++ ) {
+      var door = this.doorsActiveArr[i];
       if ( dist(rx,ry,door.x,door.y) < 1.5* max(doorSpaceReq.width,doorSpaceReq.height,door.doorWidth,door.doorHeight) ) {
         return false;
       }
     }
     return true;
   },
+
+  numOpenDoors: function() {
+    return this.getOpenDoors().length;
+  },
+
   getNextDoorId: function() {
     this.lastDoorId += 1;
     return this.lastDoorId;
   },
-  openNewDoor: function( doorOpenedCallback, doorType, keepAlive, x, y ) {
+
+  calcGridMaxColumns: function( gridSizeX, offsetX ) {
+    gridSizeX = DOOR_WIDTH;
+    offsetX = offsetX || DOOR_WIDTH;
+    var maxCols = floor((width - 2*offsetX + (gridSizeX-DOOR_WIDTH))/gridSizeX);
+    return maxCols;
+  },
+
+  calcGridMaxRows: function( gridSizeY, offsetY ) {
+    gridSizeY = DOOR_HEIGHT;
+    offsetY = offsetY || DOOR_HEIGHT;
+    var maxRows = floor((height - 2*offsetY + (gridSizeY-DOOR_HEIGHT))/gridSizeY);
+    return maxRows;
+  },
+
+  gridPointToXY: function( col, row, maxCols, maxRows, gridSizeX, gridSizeY, offsetX, offsetY ) {
+    // by default determine offsets so as to center the 
+    if ( !gridSizeX ) {
+      gridSizeX = DOOR_WIDTH;
+    }
+    if ( !gridSizeY ) {
+      gridSizeY = DOOR_HEIGHT;
+    }
+    if ( !maxCols ) {
+      offsetX = offsetX || DOOR_WIDTH;
+      maxCols = this.calcGridMaxColumns( gridSizeX, offsetX );
+    }
+    if ( !maxRows ) {
+      offsetY = offsetY || DOOR_HEIGHT;
+      maxRows = this.calcGridMaxRows( gridSizeY, offsetY );
+    }
+    if ( maxCols && !offsetX ) {
+      offsetX = floor((width - (maxCols*gridSizeX - (gridSizeX-DOOR_WIDTH)))/2);
+    }
+    if ( !offsetY ) {
+      offsetY = floor((height - (maxRows*gridSizeY - (gridSizeY-DOOR_HEIGHT)))/2);
+    }
+    var x = (col * gridSizeX) + (offsetX ? offsetX : 0);
+    var y = row * gridSizeY + (offsetY ? offsetY : 0);
+    return {x:x,y:y};
+  },
+  
+  getDoorOnGrid: function( col, row ) {
+    var gridXY = gridPointToXY( col, row );
+    var numDoors = this.doorsActiveArr.length;
+    for ( var i=0; i<numDoors; i++ ) {
+      var door = this.doorsActiveArr[i];
+      if ( gridXY.x == door.x && gridXY.y == door.y ) {
+        return door;
+      }
+    }
+    return null;
+  },
+  
+  createDoorAtXY: function(doorType,x,y) {
+    var door = new Door(doorType);
+    door.doorId = this.getNextDoorId();
+    door.setPos( x, y );
+    this.doorsActiveArr.push(door);
+    return door;
+  },
+
+  createNewDoorOnGrid: function( doorType, col, row, maxCols, maxRows, gridSizeX, gridSizeY, offsetX, offsetY ) {
+    var xy = this.gridPointToXY( col, row, maxCols, maxRows, gridSizeX, gridSizeY, offsetX, offsetY );
+    return this.createDoorAtXY( doorType, xy.x, xy.y );
+  },
+
+  createNewDoor: function( doorType, keepAlive, x, y ) {
+    // creates a new door at x,y but allows for either x/y/both
+    // to be undefined/null and picks a random value for them
+    // in thoses cases
     var xy;
     if ( !x || !y ) {
-      var emptySpaceXY = this.findEmptySpace({width:DOOR_WIDTH,height:DOOR_HEIGHT,x:x,y:y});
+      var emptySpaceXY = this.findEmptySpace(
+        {width:DOOR_WIDTH,height:DOOR_HEIGHT,x:x,y:y});
       if ( emptySpaceXY.noEmptySpace ) {
         // no room for a new door
         return false;
@@ -1024,82 +1247,92 @@ DoorMgr.prototype = {
     } else {
       xy = {x:x,y:y};
     }
-    var door = new Door(doorType);
-    door.doorId = this.getNextDoorId();
+    var door = this.createDoorAtXY( doorType, xy.x, xy.y );
     door.keepAlive = keepAlive;
-    door.setPos( xy.x, xy.y );
-    this.doorsActive[door.doorId] = door;
+    return door;
+  },
+
+  openNewDoor: function( doorOpenedCallback, doorType, keepAlive, x, y ) {
+    var door = this.createNewDoor( doorType, keepAlive, x, y );
+    if ( !door ) {
+      return null;
+    }
     door.open( doorOpenedCallback );
     return door;
   },
+
   closeDoorById: function( doorId ) {
     var door = this.getDoorById( doorId );
     if ( door ) {
       door.close();
     }
   },
-  getRandomOpenDoor: function() {
-    return this.getRandomDoor(true);
+
+  getClosedButAliveDoors: function() {
+    return this.doorsActiveArr.filter(function(door) {
+      return door.isClosed() && door.keepAlive;
+    });
   },
-  getRandomClosedDoor: function() {
-    return this.getRandomDoor(false);
+
+  getOpenDoors: function() {
+    return this.doorsActiveArr.filter(function(door) {
+      return door.isOpen();
+    })
   },
-  getRandomDoor: function( onlyOpen ) {
-    var doorIdKeysToPickFrom = [];
-    var doorIdKeys = Object.keys(this.doorsActive);
-    for (var i=0; i<doorIdKeys.length; i++) {
-      var doorId = doorIdKeys[i];
-      var door = this.doorsActive[doorId];
-      if ( onlyOpen && door.isOpen() ) {
-        doorIdKeysToPickFrom.push( doorId );
-      } else if ( door.isClosed() ) {
-        doorIdKeysToPickFrom.push( doorId );
+
+  getDoorById: function( doorId ) {
+    var numDoors = this.doorsActiveArr.length;
+    for ( var i=0; i<numDoors; i++ ) {
+      var door = this.doorsActiveArr[i];
+      if ( door.doorId == doorId ) {
+        return door;
       }
     }
-    if ( doorIdKeysToPickFrom.length == 0 ) {
-      return undefined;
-    }
-    var randomKeyIndex = floor(random(doorIdKeysToPickFrom.length));
-    var randomKey = doorIdKeysToPickFrom[randomKeyIndex];
-    var randomDoor = this.doorsActive[randomKey];
-    return randomDoor;
   },
-  getDoorById: function( doorId ) {
-    var door = this.doorsActive[doorId];
-    return door;
-  },
+
+  // closeAllDoorsForScene: function( sceneName ) {
+  //   var doorsArr = this.doorsActiveArr.filter( function(door) {
+  //     return door.sceneName == sceneName;
+  //   });
+  //   doorsArr.forEach( function( door ) {
+  //     door.close();
+  //   });
+  // },
+
   closeAllDoors: function() {
-    for (var i=0; i<this.doorsActive.length; i++) {
+    for (var i=0; i<this.doorsActiveArr.length; i++) {
       var door = this.doorsActive[i];
       if ( door.isOpen() || door.isOpening() ) {
         door.close();
       }
     }
   },
+
   removeClosedDoor: function( door ) {
     if ( !door.isClosed() ) {
       return;
     }
-    delete this.doorsActive[door.doorId];
+    var i = this.doorsActiveArr.indexOf(door);
+    if ( i != -1 ) {
+      this.doorsActiveArr.splice(i,1);
+    }
+    //delete this.doorsActive[door.doorId];
   },
+
   update: function() {
-    var doorIdKeys = Object.keys(this.doorsActive);
-    for (var i=0; i<doorIdKeys.length; i++) {
-      var doorId = doorIdKeys[i];
-      var door = this.doorsActive[doorId];
+    var that = this;
+    this.doorsActiveArr.forEach( function(door) {
       door.update();
       if ( door.isClosed() && !door.keepAlive ) {
-        this.removeClosedDoor( door );
+        that.removeClosedDoor( door );
       }
-    }
+    });    
   },
+
   draw: function() {
-    var doorIdKeys = Object.keys(this.doorsActive);
-    for (var i=0; i<doorIdKeys.length; i++) {
-      var doorId = doorIdKeys[i];
-      var door = this.doorsActive[doorId];
+    this.doorsActiveArr.forEach( function(door) {
       door.draw();
-    }
+    });    
   }
 
 };
@@ -1164,57 +1397,58 @@ function Door( doorType ) {
   this.openingDuration = this.doorSound.open.duration * 1000;
   this.closingDuration = this.doorSound.close.duration * 1000;
 
-  this.STATE_OPEN = 'open';
-  this.STATE_CLOSED = 'closed';
-  this.STATE_OPENING = 'opening';
-  this.STATE_CLOSING = 'closing';
-
   this.doorOpenedCallback = null;
   this.doorClosedCallback = null;
 }
 
+Door.STATE_OPEN = 'open';
+Door.STATE_CLOSED = 'closed';
+Door.STATE_OPENING = 'opening';
+Door.STATE_CLOSING = 'closing';
+
 Door.prototype = {
+
   setPos: function( xIn, yIn ) {
     this.x = xIn;
     this.y = yIn;
   },
 
   setStateToOpen: function() {
-    this.state = this.STATE_OPEN;
+    this.state = Door.STATE_OPEN;
     if ( this.doorOpenedCallback ) {
       this.doorOpenedCallback( this );
     }
   },
   setStateToClosed: function() {
-    this.state = this.STATE_CLOSED;
+    this.state = Door.STATE_CLOSED;
     if ( this.doorClosedCallback ) {
       this.doorClosedCallback( this );
     }
   },
   setStateToOpening: function() {
-    this.state = this.STATE_OPENING;
+    this.state = Door.STATE_OPENING;
   },
   setStateToClosing: function() {
-    this.state = this.STATE_CLOSING;
+    this.state = Door.STATE_CLOSING;
   },
 
   isOpen: function() {
-    if ( this.state === this.STATE_OPEN ) {
+    if ( this.state === Door.STATE_OPEN ) {
       return true;
     }
     return false;
   },
   isClosed: function() {
-    if ( this.state === this.STATE_CLOSED ) {
+    if ( this.state === Door.STATE_CLOSED ) {
       return true;
     }
     return false;
   },
   isOpening: function() {
-    return (this.state === this.STATE_OPENING);
+    return (this.state === Door.STATE_OPENING);
   },
   isClosing: function() {
-    return (this.state === this.STATE_CLOSING);
+    return (this.state === Door.STATE_CLOSING);
   },
   open: function( doorOpenedCallbackIn ) {
     if ( !this.isClosed() ) {
@@ -1423,3 +1657,795 @@ Math.easeOutQuad = function (t, b, c, d) {
 	t /= d;
 	return -c * t*(t-2) + b;
 };
+
+//----
+//----
+
+//
+// SceneMgr:
+// - keep history of scene sequence
+// - picks next scene
+// - next scene probabilities need to change based on the history
+//    - time that a scene occured last
+//    - num of times a scene occured within a particular timeframe window
+//
+function SceneMgr() {
+
+  var that = this;
+
+  // history contains array of objects up to length 100
+  // each object should have the following info:
+  // - scene id 
+  // - name
+  // - time that it started
+  // - time that it ended
+  this.history = [];
+
+  // scene map containing keys to all scenes
+  this.sceneIdMap = {};
+  
+  this.allScenesArr = [];
+
+  var sceneCount = 0;
+  try {
+    while ( scene=eval('new Scene_'+sceneCount+'()') ) {
+      this.allScenesArr.push( scene );
+      console.log('added scene: '+scene.name);
+      sceneCount += 1;
+      if ( sceneCount > 1000 ) {
+        console.log('********');
+        break;
+      }
+    }
+  } catch (e) {
+    // exception is expected when creating the all scenes array
+    // because it is adding scenes until it cannot find a class
+    // matching the scene counter
+  }
+  console.log('total number of scenes: '+sceneCount);
+
+  for ( var i=0; i < this.allScenesArr.length; i++ ) {
+    var sceneId = this.allScenesArr[i].sceneId;
+    this.sceneIdMap[sceneId] = this.allScenesArr[i];
+  }
+
+  // scene counter map where keys are scene ids and values are counters/priorities incremented 
+  // after a scene completes and the counter/priority for the scene completed is "reset" to 
+  // a scene-specific reset-value. For example, after a scene finishes, the priority might be set
+  // to zero or to a negative. Where a negative priority would mean to not pick that scene
+  // but that value would increase by one each time any other scene plays.
+  // [{ id: 5, priority: -5 },  {id: 2, priority: 1}, {id: 3, priority: 2}]
+  this.sceneQueueNextPriorities = [];
+
+  var initSceneQueueNextPriorities = function() {
+    that.allScenesArr.forEach( function(scene){
+      var scenePriorityItem = {sceneId: scene.sceneId, priority: scene.resetPriorityValue};
+      that.sceneQueueNextPriorities.push( scenePriorityItem );
+    });
+  };
+
+  // scene upcoming queue
+  // e.g. [8, 2, 5, 2, 1]
+  this.upcomingSceneQueue = [];
+  this.upcomingSceneQueueLength = 10;
+
+  // currently running scene
+  this.currentSceneInfo = {};
+  this.lastSceneInfo = {};
+
+  // updated by updateSceneCountInfo
+  this.sceneCountInfo = {};
+  this.sceneCountInfoCutoffPeriodMS = 5 * 60 * 1000; // 5 minutes
+
+  this.MAX_SCENE_PLAY_COUNT = 20;
+  this.scenePlayCount = 0;
+
+  //initSceneIdMap();
+  //this.updateSceneCountInfo();
+  initSceneQueueNextPriorities();
+
+}
+
+SceneMgr.instance = function() {
+  if ( !SceneMgr._singletonInstance ) {
+    SceneMgr._singletonInstance = new SceneMgr();
+  }
+  return SceneMgr._singletonInstance;
+}
+
+SceneMgr.prototype = {
+
+  start: function() {
+    console.log('SceneMgr.started');
+    //this.updateSceneCountInfo();
+    this.fillUpcomingSceneQueue();
+    this.startNextScene();
+  },
+
+  stop: function() {
+    console.log('SceneMgr.stopped');
+  },
+
+  // scene count function returning num of times all scenes played in last X period of time (e.g. 60sec)
+  updateSceneCountInfo: function() {
+    var that = this;
+    this.sceneCountInfo = {};
+    var cutoffTimeMS = millis() - this.sceneCountInfoCutoffPeriodMS;
+    var filteredHistoryArr = this.history.filter( function( historyItem ) {
+      return historyItem.startTime > cutoffTimeMS;
+    });
+    filteredHistoryArr.forEach( function( historyItem ) {
+      if ( !that.sceneCountInfo[historyItem.sceneId] ) {
+        that.sceneCountInfo[historyItem.sceneId] = 0;
+      }
+      that.sceneCountInfo[historyItem.sceneId] += 1;
+    });
+  },
+
+  // resets specified sceneId priority and increments all other scene priority
+  updateSceneQueueNextPriorities: function( sceneId ) {
+    var that = this;
+    this.sceneQueueNextPriorities.forEach(function(scenePriorityItem) {
+      var scene = that.sceneIdMap[scenePriorityItem.sceneId];
+      if ( scenePriorityItem.sceneId == sceneId ) {
+        scenePriorityItem.priority = scene.resetPriorityValue;
+      } else {
+        scenePriorityItem.priority += scene.incPriorityValue;
+      }
+    });
+  },
+
+  // adds another scene to the end of the upcoming scene queue
+  fillUpcomingSceneQueue: function() {
+    var numItemsToCreate = this.upcomingSceneQueueLength - this.upcomingSceneQueue.length;
+    for (var i=0; i < numItemsToCreate; i++) {
+      //console.log('this.sceneQueueNextPriorities = '+this.sceneQueueNextPriorities);
+      var upcomingSceneId = this.pickUpcomingSceneId();
+      //console.log('upcomingSceneId picked = '+upcomingSceneId);
+      this.upcomingSceneQueue.push( upcomingSceneId );
+      this.updateSceneQueueNextPriorities( upcomingSceneId );
+    }
+  },
+
+  // used by fillUpcomingSceneQueue
+  pickUpcomingSceneId: function() {
+    //var r = floor(random(this.allScenesArr.length));
+    var that = this;
+    var randomSceneId = -1;
+    var pArr = this.sceneQueueNextPriorities;
+    var sceneArrToChooseRandomlyFrom;
+    var highPrioritySceneArr = pArr.filter(function(priorityItem){
+      return priorityItem.priority > 10;
+    });
+    if ( highPrioritySceneArr.length > 0 ) {
+      sceneArrToChooseRandomlyFrom = highPrioritySceneArr;
+    } else {
+      var mediumPrioritySceneArr = pArr.filter(function(priorityItem){
+        return priorityItem.priority > 5;
+      });
+      if ( mediumPrioritySceneArr.length > 0 ) {
+        sceneArrToChooseRandomlyFrom = mediumPrioritySceneArr;
+      } else {
+        var lowPrioritySceneArr = pArr.filter(function(priorityItem){
+          return priorityItem.priority >= 0;
+        })
+        if ( lowPrioritySceneArr.length > 0 ) {
+          sceneArrToChooseRandomlyFrom = lowPrioritySceneArr;
+        } else {
+          // walk down from 0 to the smallest priority
+          var sortedPriorityArray = pArr.sort(function(a,b){
+            if ( a.priority > b.priority) {
+              return -1;
+            } else if ( a.priority == b.priority ) {
+              return 0;
+            }
+            return 1;
+          });
+          var lowestPriorityItem = sortedPriorityArray[sortedPriorityArray.length-1];
+          var minPriority = lowestPriorityItem.priority;
+          var highestPriorityItem = sortedPriorityArray[0];
+          var maxPriority = highestPriorityItem.priority;
+          var randomPriority = floor(random(minPriority,maxPriority));
+          for ( var i=sortedPriorityArray.length-1; i>=0; i-- ) {
+            var sortedItem = sortedPriorityArray[i];
+            if ( sortedItem.priority >= randomPriority ) {
+              randomSceneId = sortedItem.sceneId;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if ( randomSceneId == -1 ) {
+      var randomIndex = floor(random(sceneArrToChooseRandomlyFrom.length));
+      randomSceneId = sceneArrToChooseRandomlyFrom[randomIndex].sceneId;
+    }
+    var scene = this.allScenesArr[randomSceneId];
+    return scene.sceneId;
+    //return floor(random(SceneMgr.MIN_SCENE_ID, SceneMgr.MAX_SCENE_ID)); //TODO: improve this
+  },
+
+  // scene completed
+  // - updates the scene history
+  // - updates set of currently running scenes
+  sceneCompleted: function( sceneId ) {
+    console.log('sceneCompleted: '+sceneId);
+    this.currentSceneInfo.endTime = millis();
+    this.lastSceneInfo = this.currentSceneInfo;
+
+    // currentSceneInfo should already be in the history so don't need to do anything more
+    this.currentSceneInfo = {};
+
+    this.scenePlayCount += 1;
+    if ( this.scenePlayCount < this.MAX_SCENE_PLAY_COUNT ) {
+      this.startNextScene();
+      return;
+    }
+    this.stop();
+  },
+
+  // next scene
+  // - gets first value from the upcoming scene queue
+  // - adds the chosen scene to the scene history with it's start time
+  // - adds to the end of the upcoming scene queue
+  // - updates scene queue next priorities
+  startNextScene: function() {
+    this.updateSceneCountInfo();
+    var sceneId = this.getNextSceneId();
+    var sceneHistoryItem = {sceneId: sceneId, startTime:millis()};
+    this.currentSceneInfo = sceneHistoryItem;
+    this.addToSceneHistory( sceneHistoryItem );
+
+    var scene = this.sceneIdMap[sceneId];
+    scene.start();
+  },
+
+  // used by startNextScene
+  getNextSceneId: function() {
+    console.log('SceneMgr.getNextSceneId: queue is '+this.upcomingSceneQueue);
+    var nextSceneId = this.upcomingSceneQueue.shift();
+    console.log('nextSceneId = '+nextSceneId);
+    this.fillUpcomingSceneQueue();
+    return nextSceneId;
+  },
+
+  // used by startNextScene
+  // - adds the newly started scene to the history with a start time (but no end time -- that will be added upon completion)
+  addToSceneHistory: function( sceneHistoryItem ) {
+    this.history.push( sceneHistoryItem );
+  },
+
+  // ---
+  // ---
+  // ---
+
+
+
+
+};
+
+// ===
+
+
+//
+// Scene:
+// - id, name, description
+// - sequence of doors description in code as a class that inheirts from the Scene class
+// - knows when it's over
+//    - it can allow for the next scene to start "when it is over" 
+//      which may not necessarily be when all of it's doors have closed
+//      (i.e. maybe it will want to allow the next scene to start just before
+//      the scene's last door closes)
+//
+function Scene() {
+  
+  this.sceneId = -1;
+  this.sceneName = null;
+  this.sceneDescr = '';
+  this.sceneTags = {};
+
+  this.resetPriorityValue = 0; // may be set to negative numbers to make less likely to be added to the queue
+  this.incPriorityValue = 1; // used to increase the priority value of this scene by this amount
+  this.delayNextSceneMS = 0; // set to non-zero to delay the next scene a bit after this scene
+
+  this.doorsUsed = []; // should hold any door created by this scene
+
+}
+
+// sceneTags may be set as true-properties on a scene (e.g. scene1.sceneTags.isLoudEnding)
+Scene.sceneTagTypes = ['isGrid', 'isRandom', 'isLoudEnding', 'isSlow', 'isFast', 'isMany', 'isFew', 'isCreepy', 'isSuprising'];
+
+Scene.prototype = {
+
+  // start: function() {
+  //   this.done(); // default scene does nothing then finishes
+  // },
+
+  addDoorsToScene: function( doors ) {
+    if ( doors instanceof Array ) {
+      this.doorsUsed.concat( doors );
+    } else if ( doors instanceof Door ) {
+      this.doorsUsed.push( doors );
+    }
+  },
+
+  // called when scene is considered done
+  // which is whenever the scene decides that is the case which could be
+  // when the last door is opened for example. Or it could be when
+  // the last door is closed and the stage is empty.
+  done: function(completeImmediately) {
+    var that = this;
+    setTimeout( function() {
+      var finished = that.cleanup();
+      if ( completeImmediately ) {
+        SceneMgr.instance().sceneCompleted( that.sceneId );
+      } else {
+        finished.catch(function(err){}).then(function(){
+          SceneMgr.instance().sceneCompleted( that.sceneId );
+        });
+      }
+    }, this.delayNextSceneMS );
+  },
+
+  // handles any final cleaning up of objects in this scene such as leftover doors
+  cleanup: function() {
+    var doorPromiseArr = [];
+    if ( this.doorsUsed.length > 0 ) {
+      this.doorsUsed.forEach( function(d) {
+        if ( !d.isOpen() && !d.isOpening() ) {
+          return;
+        }
+        var p = new Promise(function(resolve,reject) {
+          d.keepAlive = false;
+          if ( d.isOpen() ) {
+            d.close(function(){
+              resolve(d);
+            });
+          } else if ( d.isOpening() ) {
+            d.doorOpenedCallback = function() {
+              d.close(function(){
+                resolve(d);
+              });
+            };
+          }
+        });
+        doorPromiseArr.push(p);
+      });
+    }
+    this.doorsUsed = [];
+    return Promise.all( doorPromiseArr );
+  },
+
+  wait: function( waitTimeMS ) {
+    var p = new Promise(function(resolve,reject) {
+      setTimeout(function() {
+        resolve();
+      }, waitTimeMS);
+    });
+    return p;
+  },
+
+  openDoorsPattern: function( patternType, doorType, delayTimeMS, randomizeDelay, patternDefn ) {
+    var that = this;
+    var doorOpenPromiseArr = [];
+    if ( patternType == 'boxTight' ) {
+      var maxCols = 6;
+      var maxRows = 6;
+      var gridSizeX = DOOR_WIDTH;
+      var gridSizeY = DOOR_HEIGHT;
+      for ( var i=0; i<maxCols; i++ ) {
+        for ( var j=0; j<maxRows; j++ ) {
+          doorOpenPromiseArr.push( 
+            that.openDoorOnGrid(doorType, randomizeDelay ? random(delayTimeMS) : delayTimeMS, 
+              i, j, maxCols, maxRows, gridSizeX, gridSizeY) );
+        }
+      }
+    } else if ( patternType == 'custom' ) {
+      var maxCols = patternDefn.maxCols;
+      var maxRows = patternDefn.maxRows;
+      var gridSizeX = patternDefn.gridSizeX || DOOR_WIDTH;
+      var gridSizeY = patternDefn.gridSizeY || DOOR_HEIGHT;
+      for ( var i=0; i<maxCols; i++ ) {
+        for ( var j=0; j<maxRows; j++ ) {
+          if ( patternDefn.hasDoorAt(i,j) ) {
+            doorOpenPromiseArr.push( 
+              that.openDoorOnGrid(doorType, randomizeDelay ? random(delayTimeMS) : delayTimeMS, 
+                i, j, maxCols, maxRows, gridSizeX, gridSizeY) );
+          }
+        }
+      }
+
+    }
+    return Promise.all( doorOpenPromiseArr );
+  },
+
+  openDoorOnGrid: function( doorType, delayTimeMS, col, row, maxCols, maxRows, gridSizeX, gridSizeY, offsetX, offsetY ) {
+    var that = this;
+    delayTimeMS = delayTimeMS || 0;
+    var p = new Promise(function ( resolve, reject ) {
+      window.setTimeout( function () {
+        var newDoor = doorMgr.createNewDoorOnGrid( doorType, col, row, maxCols, maxRows, gridSizeX, gridSizeY );
+        newDoor.open( function(d) {
+          resolve(d);
+        });
+        if ( !newDoor ) {
+          reject('unable to open new door');
+        }
+        that.addDoorsToScene( newDoor );        
+      }, delayTimeMS );
+    });
+    return p;
+  },
+
+  openDoors: function( numNewDoors, doorType, delayTimeMS, randomizeDelay ) {
+    delayTimeMS = delayTimeMS || 0;
+    var doorPromiseArr = [];
+    for ( var i=0; i<numNewDoors; i++ ) {
+      doorPromiseArr.push( this.openDoor( doorType, randomizeDelay ? random(delayTimeMS) : delayTimeMS ) );
+    }
+    return Promise.all( doorPromiseArr );
+  },
+
+  openDoor: function( doorType, delayTimeMS ) {
+    var that = this;
+    delayTimeMS = delayTimeMS || 0;
+    var p = new Promise(function ( resolve, reject ) {
+      window.setTimeout( function () {
+        var newDoor = doorMgr.openNewDoor( function( newOpenedDoor ) {
+          resolve( newOpenedDoor );
+        }, doorType);
+        if ( !newDoor ) {
+          reject('unable to open new door');
+        }
+        that.addDoorsToScene( newDoor );
+      }, delayTimeMS );
+    });
+    return p;
+  },
+
+  closeDoors: function( doorArr, delayTimeMS, randomizeDelay, keepAlive, delayCloseMS ) {
+    var that = this;
+    var p = new Promise(function(resolve, reject) {
+      window.setTimeout(function(){
+        var closePromiseArr = doorArr.map( function(door) {
+          door.keepAlive = keepAlive;
+          return that.closeDoor( door, randomizeDelay ? random(delayTimeMS) : delayTimeMS );
+        });
+        Promise.all( closePromiseArr ).catch(
+          function(e){
+            console.log(e);
+          }).then( function(){
+            resolve(doorArr);
+          });
+      }, delayCloseMS);
+    });
+    return p;
+  },
+
+  closeDoor: function( door, delayTimeMS ) {
+    delayTimeMS = delayTimeMS || 0;
+    return new Promise(function(resolve,reject){
+      if ( door.isOpen() ) {
+        window.setTimeout( function() {
+          door.close( function() {
+            resolve(door);
+          });
+        }, delayTimeMS);
+      } else {
+        resolve(door);
+      }
+    });
+  },
+
+  reopenDoor: function( door, delayTimeMS ) {
+    delayTimeMS = delayTimeMS || 0;
+    return new Promise(function(resolve,reject){
+      window.setTimeout( function() {
+        door.open( function() {
+          resolve(door);
+        });
+      }, delayTimeMS);
+    });
+  },
+
+  keepAliveWhenClosedDoors: function( doorArr ) {
+    doorArr.forEach( function(d) {
+      d.keepAlive = true;
+    });
+  }
+
+};
+
+// ---
+
+function Scene_0() {
+  //Scene.call(this);
+  this.sceneId = 0;
+  this.sceneName = 'scene0';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 3;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_0.prototype = new Scene();
+Scene_0.prototype.constructor = Scene_0;
+Scene_0.prototype.start = function() {
+  var that = this;
+  this.openDoors( 2, 'vertical', 0 ).then(function(dArr) {
+    return that.closeDoors(dArr,0,false,true);
+  }).then( function(dArr) {
+    //that.done();
+    var doorReopenedArr = [];
+    doorReopenedArr.push( that.reopenDoor( dArr[0], 0 ) );
+    doorReopenedArr.push( that.reopenDoor( dArr[1], 1000 ) );
+    return Promise.all( doorReopenedArr );
+  }).then( function(dArr) {
+    that.done(random(10)<5?true:false);
+  });
+};
+// Scene_0.prototype = {
+//   start: function() {
+//     var that = this;
+//     this.openDoors( 2, 'vertical', 0 ).then(function(dArr) {
+//       that.done();
+//     });
+//   }
+// };
+
+// ---
+
+function Scene_1() {
+  //Scene.call(this);
+  this.sceneId = 1;
+  this.sceneName = 'scene1';
+  this.resetPriorityValue = 0;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_1.prototype = new Scene();
+Scene_1.prototype.constructor = Scene_1;
+Scene_1.prototype.start = function() {
+  var that = this;
+  this.openDoors( 4, 'horizontal', 0 ).then(function(dArr) {
+    that.wait(random(2000,3000)).then(function() {
+      that.done(random(10)<5?true:false);
+    });
+    //that.done(true);
+  });
+};
+
+// ---
+
+function Scene_2() {
+  //Scene.call(this);
+  this.sceneId = 2;
+  this.sceneName = 'scene2';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_2.prototype = new Scene();
+Scene_2.prototype.constructor = Scene_2;
+Scene_2.prototype.start = function() {
+  var that = this;
+  this.openDoors( 3, 'horizontal2', 0 ).then(function(dArr) {
+    that.done();
+  });
+};
+
+// ---
+
+function Scene_3() {
+  //Scene.call(this);
+  this.sceneId = 3;
+  this.sceneName = 'scene3';
+  this.resetPriorityValue = 0;
+  this.incPriorityValue = 3;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_3.prototype = new Scene();
+Scene_3.prototype.constructor = Scene_3;
+Scene_3.prototype.start = function() {
+  var that = this;
+  this.openDoors( 1, 'vertical', 0 ).then(function(dArr) {
+    that.done(random(10)<5?true:false);
+  });
+};
+
+// ---
+
+function Scene_4() {
+  //Scene.call(this);
+  this.sceneId = 4;
+  this.sceneName = 'scene4';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 2;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_4.prototype = new Scene();
+Scene_4.prototype.constructor = Scene_4;
+Scene_4.prototype.start = function() {
+  var that = this;
+  this.openDoors( 1, 'horizontal2', 0 ).then(function(dArr) {
+    that.wait(random(1000,4000)).then( function() {
+      that.done(random(10)<5?true:false);
+    });
+  });
+};
+
+// ---
+
+function Scene_5() {
+  //Scene.call(this);
+  this.sceneId = 5;
+  this.sceneName = 'scene5';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 1000;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_5.prototype = new Scene();
+Scene_5.prototype.constructor = Scene_5;
+Scene_5.prototype.start = function() {
+  var that = this;
+  var doorType = 'horizontal2';
+  this.openDoors( 10, doorType, 5000, true ).catch(function(err){}).then(function(dArr) {
+    that.closeDoors(dArr,1000,true,false,2000).then(function(dArr){
+      that.done();
+    });
+  });
+};
+
+// ---
+
+function Scene_6() {
+  //Scene.call(this);
+  this.sceneId = 6;
+  this.sceneName = 'scene6';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_6.prototype = new Scene();
+Scene_6.prototype.constructor = Scene_6;
+Scene_6.prototype.start = function() {
+  var that = this;
+  var dArr = [];
+  for (var i=0; i<20; i++) {
+    dArr.push( this.openCloseNTimes(null, 'vertical', 2000, true, floor(random(4))) );
+  }
+  // Promise.all(dArr).catch(function(err){}).then( function(doorArr) {
+  //   return that.closeDoors( doorArr, 0,false,false,2000 ).then(function(){
+  //     return that.wait(2000);
+  //   });
+  // }).then( function() {
+  //   that.done();
+  // });
+  Promise.all(dArr).catch(function(err){}).then( function(doorArr) {
+    return that.closeDoors( doorArr, 0,false,false,2000 );
+  }).catch(function(err){
+    console.log(err);
+  }).then( function() {
+    return that.wait(2000);
+  }).then( function() {
+    that.done();
+  });
+
+};
+Scene_6.prototype.openCloseNTimes = function(d, doorType, delayTimeMS, randomizeDelay, nTimes) {
+  var that = this;
+  var p;
+  if ( !d ) {
+    p = this.openDoor(doorType, randomizeDelay ? random(delayTimeMS) : delayTimeMS);
+  } else {
+    p = this.reopenDoor(d, randomizeDelay ? random(delayTimeMS) : delayTimeMS);
+  }
+  return p.then(function(d) {
+    if ( nTimes == 0 && random(10) < 5 ) {
+      return d; // leave some doors open when their nTimes count gets to zero
+    }
+    if ( nTimes > 0 ) {
+      d.keepAlive = true;
+    } else {
+      d.keepAlive = false;
+    }
+    return that.closeDoor(d,randomizeDelay ? random(delayTimeMS) : delayTimeMS).then( function(d) {
+      if ( nTimes > 0 ) {
+        return that.openCloseNTimes(d,null,delayTimeMS,randomizeDelay,--nTimes);
+      } else {
+        return d;//Promise.resolve(d);
+      }
+    });
+  });
+
+};
+
+// ---
+
+function Scene_7() {
+  //Scene.call(this);
+  this.sceneId = 7;
+  this.sceneName = 'scene7';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_7.prototype = new Scene();
+Scene_7.prototype.constructor = Scene_7;
+Scene_7.prototype.start = function() {
+  var that = this;
+  this.openDoors( 15, null, 0, false ).catch(function(err) {}).then(function(){
+    that.wait(random(3000,4000)).then(function(){
+      that.done(true);
+    })
+    //that.done(true);
+  });
+};
+
+// ---
+
+function Scene_8() {
+  //Scene.call(this);
+  this.sceneId = 8;
+  this.sceneName = 'scene8';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+///Scene0.prototype = Object.create(Scene.prototype);
+Scene_8.prototype = new Scene();
+Scene_8.prototype.constructor = Scene_8;
+Scene_8.prototype.start = function() {
+  var that = this;
+  this.openDoorsPattern( 'boxTight', null, 5000, true ).catch(function(){}).then(function( dArr ){
+    that.closeDoors( dArr, 2000, true, false, random(2000,4000) ).then(function(){
+      that.done();
+    });
+  });
+};
+
+// ---
+
+function Scene_9() {
+  this.sceneId = 9;
+  this.sceneName = 'scene9';
+  this.resetPriorityValue = -1;
+  this.incPriorityValue = 1;
+  this.delayNextSceneMS = 0;
+}
+Scene_9.prototype = new Scene();
+Scene_9.prototype.constructor = Scene_9;
+Scene_9.prototype.start = function() {
+  var that = this;
+  var gridSizeX = DOOR_WIDTH;
+  var gridSizeY = DOOR_HEIGHT;
+  var maxCols = doorMgr.calcGridMaxColumns(gridSizeX);
+  var minCols = min(3, floor(maxCols/3));
+  var maxRows = doorMgr.calcGridMaxRows(gridSizeY);
+  var minRows = min(3, floor(maxRows/3));
+  var patternDefn = {
+    gridSizeX: gridSizeX,
+    gridSizeY: gridSizeY,
+    maxCols: floor(random(minCols,maxCols+1)),
+    maxRows: floor(random(minRows,maxRows+1)),
+    hasDoorAt: function( col, row ) {
+      if ( col == 0 || row == 0 || col == patternDefn.maxCols-1 || row == patternDefn.maxRows-1 ) {
+        return true;
+      }
+    }
+  };
+  this.openDoorsPattern( 'custom', null, 5000, true, patternDefn ).catch(function(){}).then(function( dArr ){
+    that.closeDoors( dArr, 2000, true, false, random(2000,4000) ).then(function(){
+      that.done();
+    });
+  });
+};
+
+
+ 
