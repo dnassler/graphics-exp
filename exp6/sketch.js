@@ -205,7 +205,10 @@ function SourceImage(sizeIn) {
   var nextShapeSize = random(10,size*0.5);
 
   var angle = PI;
+  var fromAngle = angle;
   var nextAngle = random(-TWO_PI,TWO_PI);
+  var nextAngleChangeStart = millis();
+  var nextAngleChangeDur = 5000;
 
   var x=random(size);
   var y=random(size);
@@ -235,6 +238,7 @@ function SourceImage(sizeIn) {
   var maxX = size*1.5;
   var minY = -size/2;
   var maxY = size*1.5;
+
   this.update = function() {
     
     vx += (nextVx - vx)/240;
@@ -243,8 +247,10 @@ function SourceImage(sizeIn) {
     shapeSize += (nextShapeSize-shapeSize)/240;
     //dh = Math.easeInOutCubic( this.fractionClosed(), this.doorHeight, -this.doorHeight, 1 );
 
-    
-    angle += (nextAngle-angle)/240;
+    angle = millis() > nextAngleChangeStart + nextAngleChangeDur ? angle : Math.easeInCubic( millis()-nextAngleChangeStart, fromAngle, nextAngle, nextAngleChangeDur );
+
+
+    //angle += (nextAngle-angle)/240;
     //var fromColor = colorInfoArr[currentColorInfoIndex].fromColor;
     //var toColor = colorInfoArr[currentColorInfoIndex].toColor;
     currentColorValueOnScale += (1 - currentColorValueOnScale)/60;
@@ -263,6 +269,9 @@ function SourceImage(sizeIn) {
     if ( millis() > changeVelAt ) {
       changeVelocity();
       changeVelAt = millis() + changeVelocityInterval;
+
+      nextAngleChangeStart = millis();
+      fromAngle = angle;
     }
     // if ( millis() > changeColorIndexAt ) {
     //   currentColorInfoIndex += 1;
@@ -313,6 +322,11 @@ Math.easeInOutCubic = function (t, b, c, d) {
   t -= 2;
   return c/2*(t*t*t + 2) + b;
 };
+Math.easeInCubic = function (t, b, c, d) {
+  t /= d;
+  return c*t*t*t + b;
+};
+
 
 
 // function setup() {
