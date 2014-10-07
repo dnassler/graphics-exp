@@ -59,6 +59,11 @@ var mousePressed = touchStarted = function() {
     return;
   }
 
+  // if ( ImgMgr.instance.drawMode == 'triangle' ) {
+  //   ImgMgr.instance.drawMode = 'lines';
+  // } else {
+  //   ImgMgr.instance.drawMode = 'triangle';
+  // }
 };
 
 function draw() {
@@ -80,6 +85,8 @@ function draw() {
 }
 
 function ImgMgr() {
+
+  this.drawMode = 'triangle';
 
   var iBufSize;
   if ( width > height ) {
@@ -140,9 +147,7 @@ function ImgMgr() {
         col -= 1;
         row += 1;
         if ( row >= nRows || col < 0 ) {
-          if ( row >= nRows || col < 0 ) {
-            maxCol += 1;
-          }
+          maxCol += 1;
           if ( maxCol >= nCols ) {
             maxCol = nCols-1;
             maxRow += 1;
@@ -274,10 +279,18 @@ function SourceImage(sizeIn) {
     var px2 = r.x + x;
     var py2 = r.y + y;
 
-    g.triangle(px0,py0, px1,py1, px2,py2);
+    if ( !ImgMgr.instance.drawMode || ImgMgr.instance.drawMode == 'triangle' ) {
+      g.triangle(px0,py0, px1,py1, px2,py2);
+    } else {
+      g.rect(px0,0,shapeSize,g.height*2);
+      g.rect(px1,0,shapeSize,g.height*2);
+      g.rect(px2,0,shapeSize,g.height*2);
+    }
+
   };
 
 }
+
 
 Math.easeInOutCubic = function (t, b, c, d) {
   t /= d/2;
