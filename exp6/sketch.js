@@ -99,7 +99,7 @@ function ImgMgr() {
   var nFrames = numImgInGrid * frameDelay;
   
   var iBufArr = [];
-  //var nFrames = 240;
+  
   for ( i=0; i<nFrames; i++ ) {
     iBufArr.push( createImage(gridSize,gridSize) );
   }
@@ -127,12 +127,6 @@ function ImgMgr() {
   };
 
   this.drawFramesToGrid = function() {
-    // for (var i=0; i<nCols; i++) {
-    //   for (var j=0; j<nRows; j++) {
-    //     var frameIndex = (i+j*nCols) * frameDelay;
-    //     drawFrameAtIndexToGrid(frameIndex,i,j);
-    //   }
-    // }
     var col = 0;
     var row = 0;
     var maxCol = 0;
@@ -174,7 +168,10 @@ ImgMgr.prototype.draw = function() {
   this.drawFramesToGrid();
 };
 
+// ===
+
 function SourceImage(sizeIn) {
+
   var size = sizeIn;
   var g = createGraphics(size,size);
   this.getImage = function() {
@@ -185,21 +182,11 @@ function SourceImage(sizeIn) {
     return {x:x*cos(angle)-y*sin(angle),y:x*sin(angle)+y*cos(angle)};
   };
 
-  var fromColor = color(random(255),random(255),random(255), 100);
-  var toColor = color(random(255),random(255),random(255), 100);
-  // var colorInfoArr = [];
-  // for ( var i=0; i<5; i++ ) {
-  //   colorInfoArr.push(
-  //     {fromColor: color(random(255),random(255),random(255), 100),
-  //       toColor: color(random(255),random(255),random(255), 100)});
-  // }
-  // var currentColorInfoIndex = 0;
-  // var changeColorIndexAt = 0;
-  // var changeColorIndexInterval = 20000;
+  var fromColor = color(random(255),random(255),random(255), 255);
+  var toColor = color(random(255),random(255),random(255), 255);
 
-  var shapeColor; // = color(50,55,100);
+  var shapeColor;
   var currentColorValueOnScale = 0;
-  //var nextColorValueOnScale = 1;
 
   var shapeSize = random(10,size*0.5);
   var nextShapeSize = random(10,size*0.5);
@@ -207,8 +194,8 @@ function SourceImage(sizeIn) {
   var angle = PI;
   var fromAngle = angle;
   var nextAngle = random(-TWO_PI,TWO_PI);
-  var nextAngleChangeStart = millis();
-  var nextAngleChangeDur = 5000;
+  var nextTriangleAttrStart = millis();
+  var nextTriangleAttrDur = 5000;
 
   var fromX = random(size);
   var fromY = random(size);
@@ -217,81 +204,46 @@ function SourceImage(sizeIn) {
   var x = fromX;
   var y = fromY;
 
-  var vx=0;
-  var vy=0;
-  var nextVx=random(-2,2);
-  var nextVy=random(-2,2);
-  var changeVelocity = function() {
-    nextVx = random(-1,1);
-    nextVy = random(-1,1);
-    //shapeColor = color(random(255),random(255),random(255));
-    fromX = toX;
-    fromY = toY;
-    toX = random(minX,maxX);
-    toY = random(minY,maxY);
-    console.log('x='+x+', y='+y+', toX='+toX+', toY='+toY);
-
-    fromColor = toColor;
-    toColor = color(random(255),random(255),random(255),100);
-    currentColorValueOnScale = 0;
-
-    //nextColorValueOnScale = random(1);
-    nextShapeSize = random(size/2,size*3);
-    //shapeSize = shapeSize + (nextShapeSize-shapeSize)/10;
-    nextAngle = random(-PI,PI);
-  };
-  var changeVelAt = 0;
-  var changeVelocityInterval = 5000;
-
   var minX = -size/2;
   var maxX = size*1.5;
   var minY = -size/2;
   var maxY = size*1.5;
 
+  var changeTriangleAttrs = function() {
+
+    fromX = toX;
+    fromY = toY;
+    toX = random(minX,maxX);
+    toY = random(minY,maxY);
+
+    fromColor = toColor;
+    toColor = color(random(255),random(255),random(255),100);
+    currentColorValueOnScale = 0;
+
+    nextShapeSize = random(size/5,size*3);
+    nextAngle = random(-PI,PI);
+
+  };
+
   this.update = function() {
     
-    // vx += (nextVx - vx)/240;
-    // vy += (nextVy - vy)/240;
-
     shapeSize += (nextShapeSize-shapeSize)/240;
-    //dh = Math.easeInOutCubic( this.fractionClosed(), this.doorHeight, -this.doorHeight, 1 );
 
-    if ( millis() <= nextAngleChangeStart + nextAngleChangeDur ){
-      angle = Math.easeInCubic( millis()-nextAngleChangeStart, fromAngle, nextAngle, nextAngleChangeDur );
-      x = Math.easeInOutCubic( millis()-nextAngleChangeStart, fromX, toX-fromX, nextAngleChangeDur);
-      y = Math.easeInOutCubic( millis()-nextAngleChangeStart, fromY, toY-fromY, nextAngleChangeDur);
+    if ( millis() <= nextTriangleAttrStart + nextTriangleAttrDur ){
+      angle = Math.easeInCubic( millis()-nextTriangleAttrStart, fromAngle, nextAngle, nextTriangleAttrDur );
+      x = Math.easeInOutCubic( millis()-nextTriangleAttrStart, fromX, toX-fromX, nextTriangleAttrDur);
+      y = Math.easeInOutCubic( millis()-nextTriangleAttrStart, fromY, toY-fromY, nextTriangleAttrDur);
     }
 
-    //angle += (nextAngle-angle)/240;
-    //var fromColor = colorInfoArr[currentColorInfoIndex].fromColor;
-    //var toColor = colorInfoArr[currentColorInfoIndex].toColor;
     currentColorValueOnScale += (1 - currentColorValueOnScale)/60;
     shapeColor = lerpColor(fromColor,toColor,currentColorValueOnScale);
+    
+    if ( millis() > nextTriangleAttrStart + nextTriangleAttrDur ) {
+      changeTriangleAttrs();
 
-    // x += vx;
-    // y += vy;
-    // if ( x < minX || x > maxX ) {
-    //   vx = -vx;
-    //   x = x<minX ? 0 : maxX;
-    // }
-    // if ( y < minY || y > maxY ) {
-    //   vy = -vy;
-    //   y = y<minY ? 0 : maxY;
-    // }
-    if ( millis() > changeVelAt ) {
-      changeVelocity();
-      changeVelAt = millis() + changeVelocityInterval;
-
-      nextAngleChangeStart = millis();
+      nextTriangleAttrStart = millis();
       fromAngle = angle;
     }
-    // if ( millis() > changeColorIndexAt ) {
-    //   currentColorInfoIndex += 1;
-    //   if ( currentColorInfoIndex >= colorInfoArr.length ) {
-    //     currentColorInfoIndex = 0;
-    //   }
-    //   changeColorIndexAt = millis() + changeColorIndexInterval;
-    // }
 
     drawGraphics();
   };
@@ -305,7 +257,6 @@ function SourceImage(sizeIn) {
     g.noStroke();
     //g.rect(x,y,shapeSize,shapeSize);
     //g.ellipse(x,y,shapeSize,shapeSize);
-    //g.translate(x,y);
     var sx0 = 0;
     var sy0 = -shapeSize/2;
     var sx1 = shapeSize/2;
@@ -328,7 +279,6 @@ function SourceImage(sizeIn) {
 
 }
 
-
 Math.easeInOutCubic = function (t, b, c, d) {
   t /= d/2;
   if (t < 1) return c/2*t*t*t + b;
@@ -339,17 +289,3 @@ Math.easeInCubic = function (t, b, c, d) {
   t /= d;
   return c*t*t*t + b;
 };
-
-
-
-// function setup() {
-//   createCanvas(100, 100);
-//   // var pg = createGraphics(width,height);
-//   // pg.clear();
-//   // pg.fill(0,0,255,255);
-//   // pg.rect(0,0,width,10);
-//   // img.mask(pg);
-//   // image( img, 0, 0 );
-//   //a = Tom().play( Rndf(80, 160), 1/2 )
-// }
-
