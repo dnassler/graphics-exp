@@ -210,8 +210,12 @@ function SourceImage(sizeIn) {
   var nextAngleChangeStart = millis();
   var nextAngleChangeDur = 5000;
 
-  var x=random(size);
-  var y=random(size);
+  var fromX = random(size);
+  var fromY = random(size);
+  var toX = random(size);
+  var toY = random(size);
+  var x = fromX;
+  var y = fromY;
 
   var vx=0;
   var vy=0;
@@ -221,13 +225,18 @@ function SourceImage(sizeIn) {
     nextVx = random(-1,1);
     nextVy = random(-1,1);
     //shapeColor = color(random(255),random(255),random(255));
+    fromX = toX;
+    fromY = toY;
+    toX = random(minX,maxX);
+    toY = random(minY,maxY);
+    console.log('x='+x+', y='+y+', toX='+toX+', toY='+toY);
 
     fromColor = toColor;
-    toColor = color(random(255),random(255),random(255));
+    toColor = color(random(255),random(255),random(255),100);
     currentColorValueOnScale = 0;
 
     //nextColorValueOnScale = random(1);
-    nextShapeSize = random(size/10,size*3);
+    nextShapeSize = random(size/2,size*3);
     //shapeSize = shapeSize + (nextShapeSize-shapeSize)/10;
     nextAngle = random(-PI,PI);
   };
@@ -241,14 +250,17 @@ function SourceImage(sizeIn) {
 
   this.update = function() {
     
-    vx += (nextVx - vx)/240;
-    vy += (nextVy - vy)/240;
+    // vx += (nextVx - vx)/240;
+    // vy += (nextVy - vy)/240;
 
     shapeSize += (nextShapeSize-shapeSize)/240;
     //dh = Math.easeInOutCubic( this.fractionClosed(), this.doorHeight, -this.doorHeight, 1 );
 
-    angle = millis() > nextAngleChangeStart + nextAngleChangeDur ? angle : Math.easeInCubic( millis()-nextAngleChangeStart, fromAngle, nextAngle, nextAngleChangeDur );
-
+    if ( millis() <= nextAngleChangeStart + nextAngleChangeDur ){
+      angle = Math.easeInCubic( millis()-nextAngleChangeStart, fromAngle, nextAngle, nextAngleChangeDur );
+      x = Math.easeInOutCubic( millis()-nextAngleChangeStart, fromX, toX-fromX, nextAngleChangeDur);
+      y = Math.easeInOutCubic( millis()-nextAngleChangeStart, fromY, toY-fromY, nextAngleChangeDur);
+    }
 
     //angle += (nextAngle-angle)/240;
     //var fromColor = colorInfoArr[currentColorInfoIndex].fromColor;
@@ -256,16 +268,16 @@ function SourceImage(sizeIn) {
     currentColorValueOnScale += (1 - currentColorValueOnScale)/60;
     shapeColor = lerpColor(fromColor,toColor,currentColorValueOnScale);
 
-    x += vx;
-    y += vy;
-    if ( x < minX || x > maxX ) {
-      vx = -vx;
-      x = x<minX ? 0 : maxX;
-    }
-    if ( y < minY || y > maxY ) {
-      vy = -vy;
-      y = y<minY ? 0 : maxY;
-    }
+    // x += vx;
+    // y += vy;
+    // if ( x < minX || x > maxX ) {
+    //   vx = -vx;
+    //   x = x<minX ? 0 : maxX;
+    // }
+    // if ( y < minY || y > maxY ) {
+    //   vy = -vy;
+    //   y = y<minY ? 0 : maxY;
+    // }
     if ( millis() > changeVelAt ) {
       changeVelocity();
       changeVelAt = millis() + changeVelocityInterval;
@@ -286,6 +298,7 @@ function SourceImage(sizeIn) {
 
   var drawGraphics = function() {
     g.background(0);
+    //g.clear();
     g.rectMode(CENTER);
     g.ellipseMode(CENTER);
     g.fill(shapeColor);
