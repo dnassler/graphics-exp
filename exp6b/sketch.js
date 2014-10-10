@@ -43,7 +43,7 @@ function preload() {
   soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c01.mp3') );
   soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c02.mp3') );
   soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c03.mp3') );
-  //soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c04.mp3') );
+  soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c04b.mp3') );
   speakingSounds.push( loadSound('163141__beman87__subway-ny-inside-speaker-door-o-c_cETRAIN.mp3') );
   speakingSounds.push( loadSound('163141__beman87__subway-ny-inside-speaker-door-o-c_c02_standclear.mp3') );
   speakingSounds.push( loadSound('28205__sagetyrtle__long-subway-ride_c05trackcontrol_c01.mp3') );
