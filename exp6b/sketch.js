@@ -35,6 +35,22 @@ var checkOrientation = function() {
 };
 var isFullscreen = false;
 
+var soundsArr = [];
+var speakingSounds = [];
+
+function preload() {
+  // 28205__sagetyrtle__long-subway-ride_c01.mp3
+  soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c01.mp3') );
+  soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c02.mp3') );
+  soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c03.mp3') );
+  //soundsArr.push( loadSound('28205__sagetyrtle__long-subway-ride_c04.mp3') );
+  speakingSounds.push( loadSound('163141__beman87__subway-ny-inside-speaker-door-o-c_cETRAIN.mp3') );
+  speakingSounds.push( loadSound('163141__beman87__subway-ny-inside-speaker-door-o-c_c02_standclear.mp3') );
+  speakingSounds.push( loadSound('28205__sagetyrtle__long-subway-ride_c05trackcontrol_c01.mp3') );
+
+  speakingSounds.push( loadSound('163141__beman87__subway-ny-inside-speaker-door-o-c_BEEBOO.mp3') );
+
+}
 
 function setup() {
   //isFullscreen = (typeof window.orientation !== 'undefined') ? true: fullscreen(); // if iphone/ipad/iOS fullscreen(true) doesn't work
@@ -47,7 +63,64 @@ function setup() {
   ImgMgr.instance = new ImgMgr();
   //ImgMgr.instance.drawMode = 'lines';
 
+  processSoundFiles();
 
+  SoundControl.instance.playSound(true);
+}
+
+function processSoundFiles() {
+  SoundControl.instance = new SoundControl();
+  var reverb = new p5.Reverb();
+  for ( var i=0; i<soundsArr.length; i++ ) {
+    var sound = soundsArr[i];
+    sound.playMode('sustain');
+    reverb.process( sound, 3, 2 );
+    SoundControl.instance.add( sound );
+    //sound.setRate(0.5);
+    //sound.setVolume(5);
+  }
+}
+
+function SoundControl() {
+  var sounds = [];
+  var isPlayingSpeakingSound = false;
+  this.add = function(sound) {
+    sounds.push( sound );
+  };
+  // var donePlayingSound( sound ) {
+  // };
+  this.playSound = function( keepPlayingSounds ) {
+    var that = this;
+    var r = floor(random(sounds.length));
+    var s = sounds[r];
+    var dur = s.duration();
+    window.setTimeout( function() {
+      s.play();
+    },0);
+    if ( keepPlayingSounds ) {
+      window.setTimeout(function() {
+        console.log('sound finished, starting new random sound');
+        window.setTimeout( function() {
+          that.playSound(true);
+        },0);
+        if ( random(10)<10 && isPlayingSpeakingSound == false ) {
+          console.log('about to play speaking sound');
+          that.playSpeakingSound();
+        }
+        //donePlayingSound(s);
+      }, dur*1000);
+    }
+  }
+  this.playSpeakingSound = function() {
+    var r = floor(random(speakingSounds.length));
+    var s = speakingSounds[r];
+    var dur = s.duration();
+    isPlayingSpeakingSound = true;
+    s.play();
+    window.setTimeout(function() {
+      isPlayingSpeakingSound = false;
+    },dur*1000);
+  };
 }
 
 // var mousePressed = touchStarted = function() {
