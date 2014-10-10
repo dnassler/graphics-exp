@@ -115,10 +115,55 @@ function ImgMgr() {
     type: 'tunnelLight',
     order: 1,
     color: color(200,200,50),
-    color2: color(200,200,50,50),
+    color2: color(200,200,50,50), // normal illumination full
+    color2b: color(200,200,50,45), // normal illumination sublte flicker
     width: width*0.25,
     height: height*0.05,
     y: height/10
+  };
+
+  var tunnelWires = {
+    type: 'tunnelWires',
+    order: -1,
+    width: width,
+    height: height*0.025,
+    y: height*0.36, 
+    color: color(15)
+  };
+
+  var tunnelWalkway = {
+    type: 'tunnelWalkway',
+    order: -2,
+    width: width,
+    height: height*0.2,
+    color: color(10),
+    tunnelWalkwayLightWireColor: color(5),
+    tunnelWalkwayLightWireY: height*0.87,
+    tunnelWalkwayLightWireWidth: height*0.017/4
+  };
+
+  var tunnelDoor = {
+    type: 'tunnelDoor',
+    order: -1,
+    width: width*0.1,
+    height: height*0.3,
+    y: height*0.5,
+    doorColor: color(5),
+    doorBorderWidth: height*0.025,
+    doorBorderColor: color(15),
+    doorLightColor: color(50,50,255),
+    doorLightWidth: height*0.0125
+  };
+
+
+  var tunnelWalkwayLight = {
+    type: 'tunnelWalkwayLight',
+    order: -0.5,
+    width: height*0.017,
+    height: height*0.015,
+    y: height*0.9,
+    color: color(255),
+    tunnelWalkwayLightWireColor: color(5)
   };
 
   var pillar = {
@@ -126,8 +171,23 @@ function ImgMgr() {
     order: 0,
     color: color(50),
     height: height,
-    width: 100
+    width: 100,
+    pillarCount: 0,
+    pillarLightColor: color(50,50,255,50),
+    pillarLightIllumColor: color(100,100,200,50),
+    pillarLightY: height*0.75,
+    pillarLightWidth: height*0.025,
+    pillarLightHeight: height*0.035,
+    pillarLightWireColor: color(45)
   };
+
+  var topSupport = {
+    type: 'topSupport',
+    order: 0,
+    width: width,
+    height: height*0.2+20,
+    color: color(50)
+  }
 
   var trafficLight = {
     type: 'traffic',
@@ -139,7 +199,10 @@ function ImgMgr() {
     greenLight: color(0,200,0),
     width: height*0.1,
     height: height*0.1,
-    y: height/2 
+    y: height/2,
+    lightPostColor: color(20),
+    lightPostWidth: height*0.025,
+    lightPostLightBorder: height*0.025
   }
 
   var pillarInStation = {
@@ -163,8 +226,19 @@ function ImgMgr() {
   var stationPlatform = {
     type: 'stationPlatform',
     order: -1,
-    wallColor: color(100,150,200),
+    wallColor: color(100,150,100),
+    wallDecorColor: color(50,100,50),
+    wallDecorBorderColor: color(25,50,25),
     width: width
+  };
+
+  var stationDecor = {
+    type: 'stationDecor',
+    order: -0.5,
+    width: width*0.6,
+    wallDecorColor: color(50,100,50),
+    wallDecorBorderColor: color(25,50,25)
+
   };
 
   var stationAds = {
@@ -182,13 +256,18 @@ function ImgMgr() {
   var periodicTunnelArr = [
     {thing:pillar, period:0.3, nextTunnelPos:0.1}, 
     {thing:tunnelLight, period:1.2, nextTunnelPos:0.1},
-    {thing:trafficLight, period:5, nextTunnelPos:0.1}
+    {thing:trafficLight, period:5, nextTunnelPos:0.1},
+    {thing:tunnelWires, period:1, nextTunnelPos:0},
+    {thing:tunnelWalkway, period:1, nextTunnelPos:0},
+    {thing:tunnelWalkwayLight, period: 0.22, nextTunnelPos:0.05},
+    {thing:tunnelDoor, period:2.13, nextTunnelPos:1.3}
     ];
   var periodicStationArr = [
     {thing:pillarInStation, period:0.2, nextTunnelPos:2.0}, 
     {thing:stationLight, period:0.25, nextTunnelPos:2.1},
     {thing:stationPlatform, period:1, nextTunnelPos:2},
-    {thing:stationAds, period:0.5, nextTunnelPos:2.1}
+    {thing:stationAds, period:0.75, nextTunnelPos:2.1},
+    {thing:stationDecor, period:1.35, offset:0.2, nextTunnelPos:2.5}
   ];
   var isInTunnel = true;
 
@@ -230,12 +309,20 @@ function ImgMgr() {
     var xPos = width + (thingInfoIn.nextTunnelPos - tunnelPos)*tunnelPosFactor;
     this.order = thing.order;
 
+    var info = {};
+    var normalFlickerAt=0;
     var flickerLightAt;
     var flickerLightState = false;
     if ( thing.type == 'tunnelLight' ) {
       if ( random(10)<1 ) {
         // flicker some tunnel lights but not all and flicker them at a random interval
-        flickerLightAt = millis() + random(50,200);
+        flickerLightAt = millis() + random(50,200);        
+      }
+    } else if ( thing.type == 'pillar' ) {
+      thing.pillarCount += 1;
+      if ( thing.pillarCount >= 4) {
+        info.pillarHasLight = true;
+        thing.pillarCount = 0;
       }
     }
 
@@ -300,18 +387,78 @@ function ImgMgr() {
         // fill(lightColor2);
         // rect(pillarX+pillarLength/2-200,topSupportY-150,400,70);
         if ( flickerLightState ) {
+
           //noStroke();
           fill( thing.color2 );
           //rect( xPos-(thing.width*1.5-thing.width)/2, thing.y-(thing.height*2-thing.height)/2, thing.width*1.5, thing.height*2 );
+          strokeWeight(1);
           stroke( thing.color );
           rect( xPos, thing.y, thing.width, thing.height );
+
         } else {
+
           noStroke();
-          fill( thing.color2 );
+          if ( normalFlickerAt < millis() ) {
+            normalFlickerAt = millis() + 50;
+            info.normalFlicker = !info.normalFlicker;
+          }
+          fill( info.normalFlicker ? thing.color2b : thing.color2 );
           rect( xPos-(thing.width*3-thing.width)/2, thing.y-(thing.height*5-thing.height)/2, thing.width*3, thing.height*6 );
           fill( thing.color );
           rect( xPos, thing.y, thing.width, thing.height );
         }
+
+      } else if ( thing.type == 'tunnelWalkwayLight' ) {
+
+        push();
+        //strokeWeight(thing.height);
+        //stroke(thing.color);
+        //line(xPos,thing.y,xPos+thing.width,thing.y);
+        rectMode(CENTER);
+        fill(thing.tunnelWalkwayLightWireColor);
+        strokeWeight(thing.width/4);
+        stroke(thing.tunnelWalkwayLightWireColor);
+        line( xPos,thing.y, xPos, thing.y-thing.height*2);
+        rect( xPos,thing.y-thing.height*2, thing.width/2, thing.height/2);
+        fill(thing.color);
+        rect( xPos,thing.y, thing.width, thing.height);
+        pop();
+
+      } else if ( thing.type == 'tunnelWalkway' ) {
+
+        noStroke();
+        fill( thing.color );
+        rect( xPos, height-thing.height, thing.width, thing.height);
+        stroke( thing.tunnelWalkwayLightWireColor );
+        strokeWeight( thing.tunnelWalkwayLightWireWidth );
+        line( xPos, thing.tunnelWalkwayLightWireY, thing.width, thing.tunnelWalkwayLightWireY );
+
+      } else if ( thing.type == 'tunnelWires' ) {
+
+        push();
+        stroke( thing.color );
+        strokeWeight( thing.height );
+        line( xPos, thing.y, xPos+thing.width, thing.y );
+        line( xPos, thing.y+thing.height*1.5, xPos+thing.width, thing.y+thing.height*1.5 );
+        pop();
+
+      } else if ( thing.type == 'tunnelDoor') {
+
+        noStroke();
+        fill(thing.doorBorderColor);
+        rect(xPos, thing.y-thing.doorBorderWidth, thing.width+thing.doorBorderWidth*2, thing.height+thing.doorBorderWidth);
+        fill(thing.doorColor);
+        rect(xPos+thing.doorBorderWidth, thing.y, thing.width, thing.height);
+        fill(thing.doorLightColor);
+        stroke(thing.doorColor);
+        rect(xPos+(thing.width+thing.doorBorderWidth*2)/2-thing.doorLightWidth/2, thing.y-thing.doorBorderWidth*2, thing.doorLightWidth, thing.doorLightWidth);
+
+      } else if ( thing.type == 'stationDecor' ) {
+
+        fill( thing.wallDecorColor );
+        stroke( thing.wallDecorBorderColor );
+        strokeWeight( height*0.05);
+        rect( xPos, height*0.4, thing.width, height*0.25 );
 
       } else if ( thing.type == 'pillar' ) {
 
@@ -323,6 +470,28 @@ function ImgMgr() {
 
         fill( thing.color );
         rect( xPos, 0, thing.width, thing.height);
+
+        if ( info.pillarHasLight ) {
+          push();
+          var pillarLightX = xPos+thing.width/2;
+          rectMode(CORNER);
+          fill(thing.pillarLightWireColor);
+          rect( pillarLightX-thing.pillarLightWidth/8, thing.pillarLightY+thing.pillarLightHeight/2, 
+            thing.pillarLightWidth/4, height-thing.pillarLightY );
+          rectMode(CENTER);
+          // fill(thing.pillarLightIllumColor);
+          // triangle( pillarLightX, thing.pillarLightY, 
+          //   pillarLightX-thing.pillarLightWidth*3, thing.pillarLightY-thing.pillarLightHeight*3,
+          //   pillarLightX+thing.pillarLightWidth*3, thing.pillarLightY-thing.pillarLightHeight*3 );
+          // triangle( pillarLightX, thing.pillarLightY, 
+          //   pillarLightX-thing.pillarLightWidth*3, thing.pillarLightY+thing.pillarLightHeight*3,
+          //   pillarLightX+thing.pillarLightWidth*3, thing.pillarLightY+thing.pillarLightHeight*3 );
+          fill( thing.pillarLightColor );
+          stroke(thing.pillarLightIllumColor);
+          strokeWeight(thing.pillarLightWidth/5);
+          rect( pillarLightX, thing.pillarLightY, thing.pillarLightWidth, thing.pillarLightHeight );
+          pop();
+        }
 
       } else if ( thing.type == 'traffic' ) {
 
@@ -345,8 +514,18 @@ function ImgMgr() {
           }
         }
 
+        push();
+        rectMode(CENTER);
+        fill( thing.lightPostColor );
+        noStroke();
+        //rect( xPos, thing.y, thing.width+thing.width/5, thing.height+thing.height/5 );
+        stroke( thing.lightPostColor );
+        strokeWeight( thing.lightPostWidth );
+        line( xPos, thing.y, xPos, height+10 );
         fill( trafficLightColor );
+        strokeWeight( thing.lightPostLightBorder );
         rect( xPos, thing.y, thing.width, thing.height);
+        pop();
 
       } else if ( thing.type == 'stationLight' ) {
       
@@ -369,13 +548,22 @@ function ImgMgr() {
 
       } else if ( thing.type == 'stationPlatform' ) {
 
+        push();
+        rectMode(CORNER);
         noStroke();
         fill( thing.wallColor );
         rect( xPos, 0, thing.width, height*0.8);
+        fill( thing.wallDecorColor );
+        rect( xPos, height*0.2, thing.width, height*0.25);
+        // stroke( thing.wallDecorBorderColor );
+        // strokeWeight( height*0.025);
+        // rect( xPos+thing.width*0.2, height*0.4, thing.width*0.5, height*0.25 );
         fill( 40 );
+        noStroke();
         rect( xPos, height*0.8, thing.width, height*0.2);
         fill( 70 );
         rect( xPos, height*0.8, thing.width, height*0.1);
+        pop();
 
       } else if ( thing.type == 'stationAds' ) {
 
@@ -465,16 +653,20 @@ function ImgMgr() {
       // go into station
       isInTunnel = false;
       var stationStartPos = nextStationPos;
-      tunnelResumePos = stationStartPos + 10;
+      tunnelResumePos = stationStartPos + 5;
       periodicStationArr.forEach(function(periodicItem){
-        periodicItem.nextTunnelPos = stationStartPos+1.25;
+        var offset = periodicItem.offset;
+        if ( !offset ) {
+          offset = 0;
+        }
+        periodicItem.nextTunnelPos = stationStartPos+1.25+offset;
       });
 
     } else if ( !isInTunnel && tunnelPos >= tunnelResumePos ) {
       isInTunnel = true;
       nextStationPos = tunnelResumePos + 30;
       periodicTunnelArr.forEach(function(periodicItem){
-        periodicItem.nextTunnelPos = tunnelResumePos+1.25;
+        periodicItem.nextTunnelPos = tunnelResumePos+1.5;
       });
 
     }
