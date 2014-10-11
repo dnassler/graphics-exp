@@ -218,6 +218,7 @@ function ImgMgr() {
     order: 1,
     color: color(255,255,200),
     color2: color(255,255,200,50),
+    color2b: color(255,255,200,40),
     width: height*0.1,
     height: height*0.1,
     y: height/20
@@ -257,8 +258,8 @@ function ImgMgr() {
     {thing:pillar, period:0.3, nextTunnelPos:0.1}, 
     {thing:tunnelLight, period:1.2, nextTunnelPos:0.1},
     {thing:trafficLight, period:5, nextTunnelPos:0.1},
-    {thing:tunnelWires, period:1, nextTunnelPos:0},
-    {thing:tunnelWalkway, period:1, nextTunnelPos:0},
+    {thing:tunnelWires, period:1, offset:0, nextTunnelPos:0},
+    {thing:tunnelWalkway, period:1, offset:0, nextTunnelPos:0},
     {thing:tunnelWalkwayLight, period: 0.22, nextTunnelPos:0.05},
     {thing:tunnelDoor, period:2.13, nextTunnelPos:1.3}
     ];
@@ -530,7 +531,14 @@ function ImgMgr() {
       } else if ( thing.type == 'stationLight' ) {
       
         noStroke();
-        fill( thing.color2 );
+        //
+        if ( normalFlickerAt < millis() ) {
+          normalFlickerAt = millis() + 50;
+          info.normalFlicker = !info.normalFlicker;
+        }
+        fill( info.normalFlicker ? thing.color2b : thing.color2 );
+        //
+        //fill( thing.color2 );
         rect( xPos-(thing.width*1.5-thing.width)/2, thing.y-(thing.height*1.5-thing.height)/2, thing.width*1.5, thing.height*1.5 );
         fill( thing.color );
         rect( xPos, thing.y, thing.width, thing.height );
@@ -562,7 +570,7 @@ function ImgMgr() {
         noStroke();
         rect( xPos, height*0.8, thing.width, height*0.2);
         fill( 70 );
-        rect( xPos, height*0.8, thing.width, height*0.1);
+        rect( xPos, height*0.8, thing.width, height*0.05);
         pop();
 
       } else if ( thing.type == 'stationAds' ) {
@@ -666,7 +674,11 @@ function ImgMgr() {
       isInTunnel = true;
       nextStationPos = tunnelResumePos + 30;
       periodicTunnelArr.forEach(function(periodicItem){
-        periodicItem.nextTunnelPos = tunnelResumePos+1.5;
+        var offset = periodicItem.offset;
+        if ( !offset ) {
+          offset = 0;
+        }
+        periodicItem.nextTunnelPos = tunnelResumePos+1.5+offset;
       });
 
     }
@@ -790,7 +802,7 @@ function mousePressed() {
 var pointerStarted = function(py) {
   displaySpeedControl = true;
   pointerStartedY = py;
-  globalSpeed0 = globalSpeed;
+  globalSpeed0 = newGlobalSpeed;//globalSpeed
 };
 var pointerMoved = function(py) {
   if ( !displaySpeedControl ) {
