@@ -215,11 +215,11 @@ function SourceImage(sizeIn) {
   var minY = -size/2;
   var maxY = size*1.5;
 
-  var fromX = random(minX,maxX);//0
-  var fromY = random(minY,maxY);//0
+  var fromX = 0;//random(minX,maxX);//0
+  var fromY = 0;//random(minY,maxY);//0
 
-  var toX = random(minX,maxX);//size
-  var toY = random(minY,maxY);//size
+  var toX = size;//random(minX,maxX);//size
+  var toY = size;//random(minY,maxY);//size
 
   var x = fromX;
   var y = fromY;
