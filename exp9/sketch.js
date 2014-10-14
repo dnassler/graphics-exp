@@ -66,7 +66,7 @@ var mousePressed = touchStarted = function() {
   }
   if ( !ImgMgr.instance.isStarted() ) {
     ImgMgr.instance.start();
-  } else {
+  } else if ( ImgMgr.instance.isSourceLoaded() ) {
     ImgMgr.instance.togglePausePlay();
   }
 
@@ -88,13 +88,28 @@ function draw() {
     textSize(50);
     textAlign(CENTER);
     text("click to view fullscreen properly",window.innerWidth/2,window.innerHeight/2);
-  }
-  if ( !ImgMgr.instance.isStarted() ) {
-    stroke(0);
-    fill(255);
-    textSize(50);
-    textAlign(CENTER);
-    text("touch to start",window.innerWidth/2,window.innerHeight/2);
+  } else {
+
+    if ( !ImgMgr.instance.isStarted() ) {
+      stroke(0);
+      fill(255);
+      textSize(50);
+      textAlign(CENTER);
+      text("touch to start",window.innerWidth/2,window.innerHeight/2);
+      return;
+    }
+
+    if ( !ImgMgr.instance.isSourceLoaded() ) {
+
+      stroke(0);
+      fill(255);
+      textSize(50);
+      textAlign(CENTER);
+      text("loading video...",window.innerWidth/2,window.innerHeight/2);
+      return;
+
+    }
+
   }
 
   ImgMgr.instance.update();
@@ -201,6 +216,9 @@ function ImgMgr() {
     _isStarted = true;
     sourceImage1.start();
   };
+  this.isSourceLoaded = function() {
+    return sourceImage1.isLoaded();
+  }
   var _isPaused = false;
   this.togglePausePlay = function() {
     if ( _isPaused ) {
@@ -266,18 +284,18 @@ function SourceImage(sizeIn) {
     v = createVideo(vFile2, function() {
       videoIsLoaded = true;
       vAspect = v.width/v.height;
-      //v.volume(0.01);
       console.log('video is DONE loading');
       v.play();
-      //alert('!!!!!!!');
     });
-    //v.id('myvid1');
     v.loop();
     v.hide();
-    //v.volume(0.01);
   } catch (err) {
     console.log('error!!!! '+ err);
   }
+
+  this.isLoaded = function() {
+    return videoIsLoaded;
+  };
 
   this.update = function() {
     if ( !videoIsLoaded ) {
@@ -285,7 +303,7 @@ function SourceImage(sizeIn) {
       return;
     }
     //v.volume(0.0);
-    console.log('drawing video frame');
+    //console.log('drawing video frame');
     drawGraphics();
   };
 
