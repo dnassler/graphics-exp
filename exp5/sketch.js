@@ -142,13 +142,25 @@ function setup() {
   //   doorSlideClose1.play();
   // }, 5000 );
 
-  SceneMgr.instance().start();
+  if ( window.orientation === undefined ) {
+    // only start automatically if not mobile
+    SceneMgr.instance().start();
+  }
 
   //scene0();
 }
 
 function draw() {
   background(255);
+
+  if ( !SceneMgr.instance().isStarted() ) {
+    stroke(0);
+    fill(255);
+    textSize(50);
+    textAlign(CENTER);
+    text("touch to start",window.innerWidth/2,window.innerHeight/2);
+    return;
+  }
 
   doorMgr.update();
   doorMgr.draw();
@@ -178,6 +190,12 @@ function draw() {
 //     }, 3000);
 //   }, 'horizontal2');
 // }
+
+function mousePressed() {
+  if ( !SceneMgr.instance().isStarted() ) {
+    SceneMgr.instance().start();
+  }
+}
 
 function scene0() {
   //scene7();
@@ -1744,6 +1762,20 @@ function SceneMgr() {
   //this.updateSceneCountInfo();
   initSceneQueueNextPriorities();
 
+  var _isStarted = false;
+  this.isStarted = function() {
+    return _isStarted;
+  };
+  this.start = function() {
+    console.log('SceneMgr.started');
+    _isStarted = true;
+    this.fillUpcomingSceneQueue();
+    this.startNextScene();
+  };
+  this.stop = function() {
+    console.log('SceneMgr.stopped called, not implemented');
+  }
+
 }
 
 SceneMgr.instance = function() {
@@ -1755,16 +1787,16 @@ SceneMgr.instance = function() {
 
 SceneMgr.prototype = {
 
-  start: function() {
-    console.log('SceneMgr.started');
-    //this.updateSceneCountInfo();
-    this.fillUpcomingSceneQueue();
-    this.startNextScene();
-  },
+  // start: function() {
+  //   console.log('SceneMgr.started');
+  //   //this.updateSceneCountInfo();
+  //   this.fillUpcomingSceneQueue();
+  //   this.startNextScene();
+  // },
 
-  stop: function() {
-    console.log('SceneMgr.stopped');
-  },
+  // stop: function() {
+  //   console.log('SceneMgr.stopped called, not implemented');
+  // },
 
   // scene count function returning num of times all scenes played in last X period of time (e.g. 60sec)
   updateSceneCountInfo: function() {
