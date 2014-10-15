@@ -1767,6 +1767,10 @@ function SceneMgr() {
     return _isStarted;
   };
   this.start = function() {
+    if ( _isStarted ) {
+      console.log('SceneMgr is already started');
+      return;
+    }
     console.log('SceneMgr.started');
     _isStarted = true;
     this.fillUpcomingSceneQueue();
