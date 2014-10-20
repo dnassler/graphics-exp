@@ -1,5 +1,5 @@
 //var globalSpeed = 0.7;
-var globalSpeed = 1.5;
+var globalSpeed = .5;
 
 window.onresize = function() {
   checkOrientation();
@@ -506,8 +506,8 @@ function SourceImage(sizeIn) {
   this.update = function() {
 
     //console.log('lightXvel='+lightXvel+', globalSpeed='+globalSpeed);
-    lightX += lightXvel * globalSpeed;
-    lightY += lightYvel * globalSpeed;
+    lightX += lightXvel * globalSpeed * 2;
+    lightY += lightYvel * globalSpeed * 2;
 
     if ( lightMovedOffscreen() ) {
       
