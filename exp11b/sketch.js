@@ -333,10 +333,22 @@ function ImgMgr() {
 
     var stretchHeightFactor = 1;
     push();
-    translate( width/2, height/2 );
-    rotate(TWO_PI*mouseX/width);
-    translate( -width/2, -(height*stretchHeightFactor/2) );
-    image( gFinal, 0, 0, gFinal.width, gFinal.height*stretchHeightFactor );
+    if ( window.devicePixelRatio !== 1 ) {
+      translate( width/2, height/2 );
+      rotate(TWO_PI*mouseX/width);
+      translate( -width/2, -(height*stretchHeightFactor/2) );
+      scale( window.devicePixelRatio );
+      image( gFinal, 0, 0, gFinal.width, gFinal.height*stretchHeightFactor );
+    } else {
+      translate( width/2, height/2 );
+      rotate(TWO_PI*mouseX/width);
+      translate( -width/2, -(height*stretchHeightFactor/2) );
+      image( gFinal, 0, 0, gFinal.width, gFinal.height*stretchHeightFactor );
+    }
+    // translate( width/2, height/2 );
+    // rotate(TWO_PI*mouseX/width);
+    // translate( -width/2, -(height*stretchHeightFactor/2) );
+    // image( gFinal, 0, 0, gFinal.width, gFinal.height*stretchHeightFactor );
     pop();
 
   };
@@ -401,7 +413,7 @@ function SourceImage(sizeIn) {
   };
 
   var changeLightDir = function() {
-    
+
   };
 
   var changePillarAttrs = function() {
