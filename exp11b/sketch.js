@@ -362,7 +362,8 @@ function ImgMgr() {
     push();
     if ( window.devicePixelRatio !== 1 ) {
       translate( width/2, height/2 );
-      rotate(TWO_PI*mouseX/width);
+      //rotate(TWO_PI*mouseX/width);
+      rotate( currentGridRotation );
       translate( -width/2, -(height*stretchHeightFactor/2) );
       scale( window.devicePixelRatio );
       image( gFinal, 0, 0, gFinal.width, gFinal.height*stretchHeightFactor );
