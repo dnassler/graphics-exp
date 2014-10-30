@@ -103,7 +103,7 @@ function ShapeMgr( displayMode ) {
     greyCoral: [
       color(119,136,153),
       //color(128,128,128),
-      color(90),
+      color(70),
       color(245,245,245),
       color(240,128,128),
       color(255,99,71),
@@ -353,7 +353,12 @@ function Box( shapeMgr ) {
   };
 
   var _pickNewPointOffset = function( tween, point ) {
-    tween.to({x: randomGaussian(0,_pointVarianceLimit*2), y: randomGaussian(0,_pointVarianceLimit*2)}, random(500,1000) );
+    var varianceLimit = _pointVarianceLimit * 2;
+    var variancePercentOfBoxWidth = varianceLimit / _sizeWithScale.y;
+    if ( variancePercentOfBoxWidth > 0.02 ) {
+      varianceLimit = 0.02 * _sizeWithScale.x;
+    }
+    tween.to({x: randomGaussian(0,varianceLimit), y: randomGaussian(0,varianceLimit)}, random(500,1000) );
     tween.easing(TWEEN.Easing.Quadratic.InOut);
     tween.onComplete( function() {
       _pickNewPointOffset( tween, point );
