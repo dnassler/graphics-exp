@@ -1,4 +1,4 @@
-
+var debug = false;
 // var img;
 var doorOpen;
 var doorClose;
@@ -71,15 +71,15 @@ function setup() {
   doorOpen.rate(.5);
   doorClose.setVolume(5);
   doorClose.rate(.5);
-  var doorOpenDur = doorOpen.duration() / .5 * .8;
-  var doorCloseDur = doorClose.duration() / .5 * .8;
+  var doorOpenDur = doorOpen.duration() / .5;// / .5;// * .8;
+  var doorCloseDur = doorClose.duration() / .5;// / .5;// * .8;
 
   doorSlideOpen1.setVolume(5);
   doorSlideOpen1.rate(.75);
   doorSlideClose1.setVolume(5);
   doorSlideClose1.rate(.75);
-  var doorSlideOpen1Dur = doorSlideOpen1.duration() / .75 * .8;
-  var doorSlideClose1Dur = doorSlideClose1.duration() / .75 * .8;
+  var doorSlideOpen1Dur = doorSlideOpen1.duration() / .75;// / .75;// * .8;
+  var doorSlideClose1Dur = doorSlideClose1.duration() / .75;// / .75;// * .8;
 
   doorSqueak1.rate(.5);
   doorSqueak1.setVolume(2);
@@ -90,6 +90,7 @@ function setup() {
   doorCloseHard1.rate(.5);
   doorCloseHard1.setVolume(.5);
 
+  //doorSqueak2.play();
   // doorOpen.play();
   // window.setTimeout( function(){
   //   doorSqueak1.play();
@@ -110,8 +111,12 @@ function setup() {
   doorSounds.push({
     doorType: 'horizontal2',
     //open: {file:doorSqueak2,duration:doorSqueak2.duration()/.3},//Math.easeOutQuint
+
+    // open: {file:doorSqueak2,duration:doorSqueak2.duration()/.5},//Math.easeOutQuint
+    // close: {file:doorCloseHard1,duration:doorCloseHard1.duration()/.5*.7}
+
     open: {file:doorSqueak2,duration:doorSqueak2.duration()/.5},//Math.easeOutQuint
-    close: {file:doorCloseHard1,duration:doorCloseHard1.duration()/.5*.7}
+    close: {file:doorCloseHard1,duration:doorCloseHard1.duration()}
     });
 
   doorSounds.push({
@@ -153,7 +158,7 @@ function setup() {
 function draw() {
   background(255);
 
-  if ( !SceneMgr.instance().isStarted() ) {
+  if ( !debug && !SceneMgr.instance().isStarted() ) {
     stroke(0);
     fill(255);
     textSize(50);
@@ -195,6 +200,7 @@ function mousePressed() {
   if ( !SceneMgr.instance().isStarted() ) {
     SceneMgr.instance().start();
   }
+  //testScene();
 }
 
 function scene0() {
@@ -215,7 +221,8 @@ function testScene() {
         },3000);
       });
     }, 3000);
-  }, 'horizontal2');
+  }, 'vertical');
+
 }
 function testSceneDone() {
   console.log('testScene is DONE');
@@ -1755,7 +1762,7 @@ function SceneMgr() {
   this.sceneCountInfo = {};
   this.sceneCountInfoCutoffPeriodMS = 5 * 60 * 1000; // 5 minutes
 
-  this.MAX_SCENE_PLAY_COUNT = 20;
+  this.MAX_SCENE_PLAY_COUNT = 40;
   this.scenePlayCount = 0;
 
   //initSceneIdMap();
