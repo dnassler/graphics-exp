@@ -46,7 +46,7 @@ function setup() {
   // var g1 = createGraphics(width,height);
   // g1.noStroke();
   // g1.fill(255);
-  // g1.rectMode(CENTER); 
+  // g1.rectMode(CENTER);
 
   // g1.translate(width/2,height/2);
   // x1 = 0;
@@ -103,7 +103,7 @@ function Boxes() {
     for (i=0; i<numBoxes; i++) {
       bArr[i].moveOut();
     }
-    resetAllAt = millis() + 3000;
+    resetAllAt = millis() + 2000;
   };
 
   var resetAll = function() {
@@ -147,6 +147,9 @@ var constants = {
 };
 
 function Box( g ) {
+
+  var graphics = g;
+
   var x, y;
   var rAngle;
 
@@ -159,14 +162,17 @@ function Box( g ) {
     yMin = g.height*0.1,
     yMax = g.height*0.9;
 
+  var topLimitY = -boxMaxSize,
+    bottomLimitY = graphics.height+boxMaxSize,
+    leftLimitX = -boxMaxSize,
+    rightLimitX = graphics.width+boxMaxSize;
+
   var xFrom, yFrom;
   var xTo, yTo;
   var rAngleFrom, rAngleTo;
 
   var isMoving = false;
   var isMovedOut = false;
-
-  var graphics = g;
 
   var pickDirection = function() {
     return floor(random(4));
@@ -176,13 +182,13 @@ function Box( g ) {
       direction = pickDirection();
     }
     if ( direction === constants.MOVE_UP ) {
-      pickNewTarget(x, -boxMaxSize, rAngle);
+      pickNewTarget(x, topLimitY, rAngle);
     } else if ( direction === constants.MOVE_DOWN ) {
-      pickNewTarget(x, graphics.height+boxMaxSize, rAngle);
+      pickNewTarget(x, bottomLimitY, rAngle);
     } else if ( direction === constants.MOVE_LEFT ) {
-      pickNewTarget(-boxMaxSize, y, rAngle);
+      pickNewTarget(leftLimitX, y, rAngle);
     } else if ( direction === constants.MOVE_RIGHT ) {
-      pickNewTarget(graphics.width+boxMaxSize, y, rAngle);
+      pickNewTarget(rightLimitX, y, rAngle);
     }
     isMoving = true;
     isMovedOut = true;
@@ -194,16 +200,6 @@ function Box( g ) {
   var startedMovingAt;
   var durationMoving;
 
-  this.reset = function() {
-    x = random(xMin,xMax);
-    y = random(yMin,yMax);
-    rAngle = random(-TWO_PI,TWO_PI);
-    isMoving = false;
-    isMovedOut = false;
-    startMovingAt = 0;
-  };
-  this.reset();
-
   var pickNewTarget = function(xToIn, yToIn, rAngleToIn) {
     xFrom = x;
     yFrom = y;
@@ -212,6 +208,32 @@ function Box( g ) {
     yTo = yToIn || random(yMin, yMax);
     rAngleTo = rAngleToIn || random( -TWO_PI, TWO_PI );
   };
+
+  this.reset = function() {
+    x = random(xMin,xMax);
+    y = random(yMin,yMax);
+    rAngle = random(-TWO_PI,TWO_PI);
+    var d = pickDirection();
+    if ( d === constants.MOVE_UP ) {
+      y = bottomLimitY;
+      pickNewTarget(x,null,rAngle);
+    } else if ( d === constants.MOVE_DOWN ) {
+      y = topLimitY;
+      pickNewTarget(x,null,rAngle);
+    } else if ( d === constants.MOVE_LEFT ) {
+      x = rightLimitX;
+      pickNewTarget(null,y,rAngle);
+    } else {
+      x = leftLimitX;
+      pickNewTarget(null,y,rAngle);
+    }
+    isMoving = true;
+    isMovedOut = false;
+    startMovingAt = 0;
+    startedMovingAt = millis();
+    durationMoving = 4000;
+  };
+  this.reset();
 
   var pickNextStartMovingAt = function() {
     startMovingAt = millis() + random(10000);
@@ -285,3 +307,10 @@ Math.easeInCubic = function (t, b, c, d) {
   t /= d;
   return c*t*t*t + b;
 };
+
+function keyTyped() {
+  if (key === ' ') {
+    save('exp13blackandwhiteshapes.png');
+  }
+  return false; // prevent any default behavior
+}
