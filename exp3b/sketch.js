@@ -122,6 +122,7 @@ function draw() {
     bubble.evolve();
     //bubble.display();
   }
+  strokeWeight(1);
   for ( var i=0; i<bubbles.length; i++ ) {
     bubble = bubbles[i];
     var currentConnections = 0;
